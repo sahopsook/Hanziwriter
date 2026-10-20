@@ -6,7 +6,7 @@
   <title>ฝึกเขียนอักษรจีน</title>
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
-  
+
   <!-- โหลดไฟล์ฐานข้อมูล JavaScript ทั้ง 3 ไฟล์ในโฟลเดอร์เดียวกัน -->
   <script src="./hanzi_common.js"></script>
   <script src="./hanzi_extra1.js"></script>
@@ -20,12 +20,12 @@
     }
 
     /* ช่องค้นหา */
-    .search-bar { display: flex; gap: 8px; margin-bottom: 12px; width: 100%; max-width: 350px; }
+    .search-bar { display: flex; gap: 8px; margin-bottom: 12px; width: 100%; max-width: 380px; }
     .search-bar input { flex: 1; padding: 10px 14px; font-size: 18px; border: 2px solid #ffb74d; border-radius: 10px; outline: none; }
     .search-bar button { padding: 10px 18px; font-size: 16px; font-weight: bold; background: #ff9800; color: white; border: none; border-radius: 10px; cursor: pointer; }
 
     /* แถบตัวอักษรแนวนอน */
-    .char-list { display: flex; gap: 12px; overflow-x: auto; width: 100%; max-width: 350px; padding: 8px 4px; margin-bottom: 10px; min-height: 54px; }
+    .char-list { display: flex; gap: 12px; overflow-x: auto; width: 100%; max-width: 380px; padding: 8px 4px; margin-bottom: 10px; min-height: 54px; }
     .char-item {
       min-width: 54px; height: 54px; background: #fff9c4; border: 2px solid #e6ce8a;
       border-radius: 10px; display: flex; align-items: center; justify-content: center;
@@ -42,7 +42,7 @@
 
     /* กรอบสีเขียวแสดงข้อมูล */
     .info-card {
-      background: #e8f5e9; border-radius: 16px; padding: 14px 18px; width: 100%; max-width: 350px;
+      background: #e8f5e9; border-radius: 16px; padding: 14px 18px; width: 100%; max-width: 380px;
       box-sizing: border-box; margin-bottom: 15px; color: #4e342e; font-size: 17px; line-height: 1.7;
       box-shadow: 0 3px 6px rgba(0,0,0,0.06);
     }
@@ -50,14 +50,14 @@
     .info-label { font-weight: bold; color: #3e2723; }
     .info-value { color: #bf360c; font-weight: 600; margin-left: 6px; }
 
-    /* กระดานคัดจีน */
+    /* กระดานคัดจีน (ขนาดจะถูกตั้งค่าแบบ responsive ด้วย JavaScript) */
     .grid-box {
       background: white; padding: 15px; border-radius: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1); touch-action: none; position: relative;
-      width: 280px; height: 280px;
+      box-sizing: content-box;
     }
     .grid-bg, .writer-layer {
-      position: absolute; top: 15px; left: 15px; width: 280px; height: 280px;
+      position: absolute; top: 15px; left: 15px;
     }
     .grid-bg { pointer-events: none; }
     .writer-layer { z-index: 1; }
@@ -65,6 +65,15 @@
     .controls { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 380px; }
     .controls button { padding: 10px 18px; font-size: 15px; border-radius: 10px; border: none; background: #ff9800; color: white; cursor: pointer; font-weight: bold; }
     .controls button.off { background: #9e9e9e; }
+
+    .version-text {
+      margin-top: 24px;
+      margin-bottom: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -85,13 +94,13 @@
     </div>
   </div>
 
-  <div class="grid-box">
-    <svg class="grid-bg" xmlns="http://www.w3.org/2000/svg" width="280" height="280">
-      <rect x="2" y="2" width="276" height="276" fill="none" stroke="#ff5252" stroke-width="3" />
-      <line x1="0" y1="0" x2="280" y2="280" stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
-      <line x1="280" y1="0" x2="0" y2="280" stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
-      <line x1="140" y1="0" x2="140" y2="280" stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
-      <line x1="0" y1="140" x2="280" y2="140" stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
+  <div class="grid-box" id="gridBox">
+    <svg class="grid-bg" id="gridBg" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" fill="none" stroke="#ff5252" stroke-width="3" />
+      <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
+      <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
+      <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
+      <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
     </svg>
     <div class="writer-layer" id="writer-target"></div>
   </div>
@@ -107,17 +116,73 @@
     ข้อมูลตัวอักษรและลำดับขีดจาก <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>
   </div>
 
+  <div class="version-text">Version 0.01</div>
+
   <script>
     let db = null;
     let writer = null;
     let currentChar = '';
 
-    const HINT_INTERVAL_MS = 1500;   
-    let hintEnabled = true;          
-    let hintTimer = null;            
-    let hintStrokeNum = 0;           
-    let outlineEnabled = true;       
+    const HINT_INTERVAL_MS = 1500;
+    let hintEnabled = true;
+    let hintTimer = null;
+    let hintStrokeNum = 0;
+    let outlineEnabled = true;
     let quizActive = false;
+
+    // ===== คำนวณขนาดกระดานแบบ responsive ให้เกือบเต็มความกว้างหน้าจอมือถือ =====
+    let BOX_SIZE = 280;
+    function computeBoxSize() {
+      // ใช้ 92% ของความกว้างหน้าจอ แต่ไม่เกิน 380px (และไม่เล็กกว่า 220px)
+      const size = Math.round(Math.min(window.innerWidth * 0.92, 380));
+      return Math.max(size, 220);
+    }
+
+    function applyBoxSize() {
+      BOX_SIZE = computeBoxSize();
+      const gridBox = document.getElementById('gridBox');
+      const gridBg = document.getElementById('gridBg');
+      const writerLayer = document.getElementById('writer-target');
+
+      gridBox.style.width = BOX_SIZE + 'px';
+      gridBox.style.height = BOX_SIZE + 'px';
+
+      gridBg.setAttribute('width', BOX_SIZE);
+      gridBg.setAttribute('height', BOX_SIZE);
+      gridBg.style.width = BOX_SIZE + 'px';
+      gridBg.style.height = BOX_SIZE + 'px';
+
+      writerLayer.style.width = BOX_SIZE + 'px';
+      writerLayer.style.height = BOX_SIZE + 'px';
+
+      const rect = gridBg.querySelector('rect');
+      rect.setAttribute('width', BOX_SIZE - 4);
+      rect.setAttribute('height', BOX_SIZE - 4);
+
+      const lines = gridBg.querySelectorAll('line');
+      // เส้นทแยงมุม 2 เส้น + เส้นกลางแนวตั้ง + เส้นกลางแนวนอน
+      lines[0].setAttribute('x1', 0); lines[0].setAttribute('y1', 0);
+      lines[0].setAttribute('x2', BOX_SIZE); lines[0].setAttribute('y2', BOX_SIZE);
+
+      lines[1].setAttribute('x1', BOX_SIZE); lines[1].setAttribute('y1', 0);
+      lines[1].setAttribute('x2', 0); lines[1].setAttribute('y2', BOX_SIZE);
+
+      lines[2].setAttribute('x1', BOX_SIZE / 2); lines[2].setAttribute('y1', 0);
+      lines[2].setAttribute('x2', BOX_SIZE / 2); lines[2].setAttribute('y2', BOX_SIZE);
+
+      lines[3].setAttribute('x1', 0); lines[3].setAttribute('y1', BOX_SIZE / 2);
+      lines[3].setAttribute('x2', BOX_SIZE); lines[3].setAttribute('y2', BOX_SIZE / 2);
+    }
+
+    window.addEventListener('resize', () => {
+      const oldSize = BOX_SIZE;
+      applyBoxSize();
+      // ถ้าขนาดเปลี่ยนจริง ให้วาดตัวอักษรใหม่ให้พอดีกรอบใหม่
+      if (oldSize !== BOX_SIZE && currentChar) {
+        const activeEl = document.querySelector('.char-item.active');
+        selectCharacter(currentChar, activeEl);
+      }
+    });
 
     // ฟังก์ชันช่วยรวมข้อมูลจากตัวแปร Base64 เข้า SQLite
     function appendDatabase(SQL, targetDb, b64Data) {
@@ -140,6 +205,7 @@
 
     // โหลดฐานข้อมูลจากทั้ง 3 ไฟล์มารวมกัน
     window.onload = async function() {
+      applyBoxSize();
       try {
         const SQL = await initSqlJs({
           locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`
@@ -192,7 +258,7 @@
     function flashOnMistake() {
       if (!writer || !quizActive) return;
       if (hintEnabled) {
-        startHintLoop();   
+        startHintLoop();
       } else {
         writer.highlightStroke(hintStrokeNum);
       }
@@ -282,13 +348,17 @@
       }
 
       destroyWriter();
+
+      // ลด padding ให้เหลือน้อยมาก (2% ของขนาดกรอบ) เพื่อให้ตัวอักษรใหญ่เกือบเต็มกรอบแดง
+      const dynamicPadding = Math.round(BOX_SIZE * 0.02);
+
       writer = HanziWriter.create('writer-target', char, {
-        width: 280, height: 280, padding: 20,
+        width: BOX_SIZE, height: BOX_SIZE, padding: dynamicPadding,
         showCharacter: false,
-        showOutline: outlineEnabled,   
+        showOutline: outlineEnabled,
         drawingWidth: 25,
-        highlightColor: '#ff9800',     
-        showHintAfterMisses: false     
+        highlightColor: '#ff9800',
+        showHintAfterMisses: false
       });
 
       startQuiz();
@@ -299,8 +369,8 @@
       stopHintLoop();
       writer.cancelQuiz();
 
-      hintStrokeNum = 0;   
-      quizActive = true;   
+      hintStrokeNum = 0;
+      quizActive = true;
 
       writer.quiz({
         showHintAfterMisses: false,
@@ -328,8 +398,8 @@
 
     function animateChar() {
       if (!writer) return;
-      quizActive = false;     
-      stopHintLoop();         
+      quizActive = false;
+      stopHintLoop();
       writer.cancelQuiz();
       writer.animateCharacter({
         onComplete: function() {}
