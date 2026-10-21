@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ฝึกเขียนอักษรจีน</title>
+
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 
@@ -13,47 +15,130 @@
 
   <style>
     body {
-      display: flex; flex-direction: column; align-items: center;
-      font-family: 'Segoe UI', Tahoma, sans-serif; background: #fdfaf2;
-      margin: 0; padding: 15px; user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #fdfaf2;
+      margin: 0;
+      padding: 15px;
+      user-select: none;
     }
 
-    .search-bar { display: flex; gap: 8px; margin-bottom: 12px; width: 100%; max-width: 380px; }
-    .search-bar input { flex: 1; padding: 10px 14px; font-size: 18px; border: 2px solid #ffb74d; border-radius: 10px; outline: none; }
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 14px;
+      font-size: 18px;
+      border: 2px solid #ffb74d;
+      border-radius: 10px;
+      outline: none;
+    }
+
     .search-bar button {
-      width: 46px; height: 46px; font-size: 30px; font-weight: bold;
-      background: #ff9800; color: white; border: none; border-radius: 10px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+      font-size: 30px;
+      font-weight: bold;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
-    .char-list { display: flex; gap: 12px; overflow-x: auto; width: 100%; max-width: 380px; padding: 8px 4px; margin-bottom: 10px; min-height: 54px; }
-    .char-item {
-      min-width: 54px; height: 54px; background: #fff9c4; border: 2px solid #e6ce8a;
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      font-size: 32px; font-family: "KaiTi", "STKaiti", serif; cursor: pointer; position: relative; flex-shrink: 0;
+    .char-list {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      width: 100%;
+      max-width: 380px;
+      padding: 8px 4px;
+      margin-bottom: 10px;
+      min-height: 54px;
     }
+
+    .char-item {
+      min-width: 54px;
+      height: 54px;
+      background: #fff9c4;
+      border: 2px solid #e6ce8a;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-family: "KaiTi", "STKaiti", serif;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+
     .char-item::before {
-      content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; border: 1px solid #bcaaa4;
-      background: linear-gradient(to right, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%),
-                  linear-gradient(to bottom, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%);
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      border: 1px solid #bcaaa4;
+      background:
+        linear-gradient(to right, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%),
+        linear-gradient(to bottom, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%);
       pointer-events: none;
     }
-    .char-item span { z-index: 1; color: #212121; }
-    .char-item.active { border-color: #ff5722; background: #ffe082; transform: scale(1.08); }
+
+    .char-item span {
+      z-index: 1;
+      color: #212121;
+    }
+
+    .char-item.active {
+      border-color: #ff5722;
+      background: #ffe082;
+      transform: scale(1.08);
+    }
 
     /* กระดานคัดจีน */
     .grid-box {
-      background: white; padding: 15px; border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1); touch-action: none; position: relative;
+      background: white;
+      padding: 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      touch-action: none;
+      position: relative;
       box-sizing: content-box;
     }
-    .grid-bg, .writer-layer, .overlay-panel {
-      position: absolute; top: 15px; left: 15px;
-    }
-    .grid-bg { pointer-events: none; }
-    .writer-layer { z-index: 1; }
 
-    /* แผ่นซ้อนทับแสดงคำบรรยาย / วิธีใช้ ในตำแหน่งเดียวกับกริด */
+    .grid-bg,
+    .writer-layer,
+    .overlay-panel {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+    }
+
+    .grid-bg {
+      pointer-events: none;
+    }
+
+    .writer-layer {
+      z-index: 1;
+    }
+
+    /* แผ่นซ้อนทับแสดงคำบรรยาย / วิธีใช้ */
     .overlay-panel {
       z-index: 5;
       background: rgba(232, 245, 233, 0.98);
@@ -67,60 +152,158 @@
       font-size: 15px;
       line-height: 1.7;
     }
-    .overlay-panel.show { display: block; }
-    .overlay-panel .info-label { font-weight: bold; color: #3e2723; }
-    .overlay-panel .info-value { color: #bf360c; font-weight: 600; margin-left: 6px; }
-    .overlay-panel .info-row { margin-bottom: 8px; }
-    .overlay-panel h3 { margin-top: 0; color: #2e7d32; font-size: 16px; }
-    .overlay-panel p { margin: 6px 0; display: flex; align-items: center; gap: 8px; }
 
-    .controls { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 380px; }
-    .controls button {
-      width: 46px; height: 46px; font-size: 30px; border-radius: 10px; border: none;
-      background: #ff9800; color: white; cursor: pointer; font-weight: bold;
-      display: flex; align-items: center; justify-content: center; position: relative;
+    .overlay-panel.show {
+      display: block;
     }
-    .controls button.off { background: #9e9e9e; }
+
+    .overlay-panel .info-label {
+      font-weight: bold;
+      color: #3e2723;
+    }
+
+    .overlay-panel .info-value {
+      color: #bf360c;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .overlay-panel .info-row {
+      margin-bottom: 8px;
+    }
+
+    .overlay-panel h3 {
+      margin-top: 0;
+      color: #2e7d32;
+      font-size: 16px;
+    }
+
+    .overlay-panel p {
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 380px;
+    }
+
+    .controls button {
+      width: 46px;
+      height: 46px;
+      font-size: 30px;
+      border-radius: 10px;
+      border: none;
+      background: #ff9800;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .controls button.off {
+      background: #9e9e9e;
+    }
 
     /* ไอคอนหลอดไฟกะพริบ */
-    .bulb-on { animation: blinkBulb 1s infinite; }
-    @keyframes blinkBulb {
-      0%, 49% { color: #ffeb3b; }
-      50%, 100% { color: #9e9e9e; }
+    .bulb-on {
+      animation: blinkBulb 1s infinite;
     }
 
-    /* ไอคอนสามเหลี่ยมสีขาว ขยายใหญ่ขึ้นเกือบเต็มปุ่ม สำหรับปุ่มดูตัวอย่างลำดับขีด */
+    @keyframes blinkBulb {
+      0%, 49% {
+        color: #ffeb3b;
+      }
+      50%, 100% {
+        color: #9e9e9e;
+      }
+    }
+
+    /* ไอคอนสามเหลี่ยมสำหรับปุ่มดูตัวอย่างลำดับขีด */
     .play-triangle {
-      width: 0; height: 0;
+      width: 0;
+      height: 0;
       border-top: 16px solid transparent;
       border-bottom: 16px solid transparent;
       border-left: 26px solid white;
       margin-left: 5px;
     }
 
-    /* ไอคอนกริดเล็ก สำหรับปุ่มตัวอักษรสีเทา (ใช้ร่วมกันทั้งปุ่มและข้อความวิธีใช้) */
+    /* ไอคอนกริดเล็ก */
     .mini-grid {
-      width: 32px; height: 32px; border: 3px solid #fff; border-radius: 3px;
-      position: relative; display: inline-flex; align-items: center; justify-content: center;
-      box-sizing: border-box; background: #ff9800; vertical-align: middle;
+      width: 32px;
+      height: 32px;
+      border: 3px solid #fff;
+      border-radius: 3px;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      background: #ff9800;
+      vertical-align: middle;
       transition: background 0.2s ease;
     }
-    .mini-grid::before, .mini-grid::after {
-      content: ''; position: absolute; background: #fff;
+
+    .mini-grid::before,
+    .mini-grid::after {
+      content: '';
+      position: absolute;
+      background: #fff;
     }
-    .mini-grid::before { width: 100%; height: 1px; top: 50%; left: 0; }
-    .mini-grid::after { height: 100%; width: 1px; left: 50%; top: 0; }
-    .mini-grid span { font-size: 18px; color: #bdbdbd; z-index: 2; font-family: "KaiTi","STKaiti",serif; }
-    .mini-grid.inline-small { width: 18px; height: 18px; border-width: 2px; }
-    .mini-grid.inline-small span { font-size: 10px; }
 
-    /* เมื่อปิดใช้งานตัวอักษรสีเทา ให้พื้นหลังไอคอนในปุ่มเป็นสีเทาด้วย */
-    #outlineToggleBtn.off .mini-grid { background: #9e9e9e; }
+    .mini-grid::before {
+      width: 100%;
+      height: 1px;
+      top: 50%;
+      left: 0;
+    }
 
-    /* ไอคอนดินสอ วาดด้วย SVG ให้ขยายใหญ่เกือบเต็มปุ่ม */
-    .pencil-icon svg { width: 42px; height: 42px; display: block; }
+    .mini-grid::after {
+      height: 100%;
+      width: 1px;
+      left: 50%;
+      top: 0;
+    }
 
-    /* รูปหนังสือเปิด วาดด้วย Pure CSS ให้สมจริงและรองรับทุกลินุกซ์/เบราว์เซอร์ */
+    .mini-grid span {
+      font-size: 18px;
+      color: #bdbdbd;
+      z-index: 2;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+
+    .mini-grid.inline-small {
+      width: 18px;
+      height: 18px;
+      border-width: 2px;
+    }
+
+    .mini-grid.inline-small span {
+      font-size: 10px;
+    }
+
+    #outlineToggleBtn.off .mini-grid {
+      background: #9e9e9e;
+    }
+
+    /* ไอคอนดินสอ */
+    .pencil-icon svg {
+      width: 42px;
+      height: 42px;
+      display: block;
+    }
+
+    /* รูปหนังสือเปิด */
     .css-book {
       position: relative;
       width: 28px;
@@ -130,29 +313,38 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
       display: inline-block;
     }
+
     .css-book::before {
       content: '';
       position: absolute;
-      top: 0; bottom: 0; left: 50%;
+      top: 0;
+      bottom: 0;
+      left: 50%;
       width: 2px;
       background: #b71c1c;
       transform: translateX(-50%);
       z-index: 3;
     }
-    /* หน้าหนังสือซ้าย */
+
     .css-book .page-left {
       position: absolute;
-      top: 1px; bottom: 1px; left: 1px; right: 50%;
+      top: 1px;
+      bottom: 1px;
+      left: 1px;
+      right: 50%;
       background: #fff;
       border-top-left-radius: 2px;
       border-bottom-left-radius: 2px;
       border-left: 1px solid #ef9a9a;
       box-shadow: inset -2px 0 3px rgba(0,0,0,0.08);
     }
-    /* หน้าหนังสือขวา */
+
     .css-book .page-right {
       position: absolute;
-      top: 1px; bottom: 1px; left: 50%; right: 1px;
+      top: 1px;
+      bottom: 1px;
+      left: 50%;
+      right: 1px;
       background: #fff;
       border-top-right-radius: 2px;
       border-bottom-right-radius: 2px;
@@ -160,7 +352,7 @@
       box-shadow: inset 2px 0 3px rgba(0,0,0,0.08);
     }
 
-    /* ตัวหนังสือ ? สีเขียว ขยายใหญ่และหนาขึ้น สำหรับปุ่มวิธีใช้ */
+    /* เครื่องหมายคำถาม */
     .help-mark {
       color: #2e7d32;
       font-weight: 900;
@@ -170,11 +362,19 @@
       text-shadow: 0 0 1px #2e7d32;
     }
 
-    /* ไอคอนปุ่มเครื่องหมายคำถามสีส้ม ใช้ในข้อความอธิบายวิธีใช้ */
     .help-icon-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 26px; height: 26px; min-width: 26px; background: #ff9800; color: white;
-      border-radius: 50%; font-weight: 900; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      background: #ff9800;
+      color: white;
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
     .version-text {
@@ -194,14 +394,19 @@
       width: 100%;
       max-width: 380px;
     }
-
-    /* tooltip แบบ title ปกติของเบราว์เซอร์ ถูกใช้งานผ่าน attribute title */
   </style>
 </head>
+
 <body>
 
   <div class="search-bar">
-    <input type="text" id="charInput" placeholder="พิมพ์อักษรจีน เช่น 你好">
+    <input
+      type="text"
+      id="charInput"
+      placeholder="Enter Chinese characters, e.g. 你好"
+      autocomplete="off"
+      aria-label="Chinese character search"
+    >
     <button id="searchBtn" onclick="renderCharList()">🔍</button>
   </div>
 
@@ -215,51 +420,96 @@
       <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
       <line stroke="#ff8a80" stroke-width="2" stroke-dasharray="8,8" />
     </svg>
+
     <div class="writer-layer" id="writer-target"></div>
     <div class="overlay-panel" id="overlayPanel"></div>
   </div>
 
   <div class="controls">
+
     <button id="descBtn" onclick="toggleDescription()">
-      <span class="css-book"><span class="page-left"></span><span class="page-right"></span></span>
+      <span class="css-book">
+        <span class="page-left"></span>
+        <span class="page-right"></span>
+      </span>
     </button>
+
     <button id="restartBtn" onclick="startQuiz()">
       <span class="pencil-icon">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <g transform="rotate(-45 12 12)">
-            <rect x="1.5" y="9" width="3.2" height="6" rx="0.6" fill="#f06292" stroke="#ad1457" stroke-width="0.4"/>
-            <rect x="4.7" y="9" width="2" height="6" fill="#cfd8dc" stroke="#90a4ae" stroke-width="0.4"/>
-            <rect x="6.7" y="9" width="11" height="6" fill="#1565c0" stroke="#0d47a1" stroke-width="0.4"/>
-            <polygon points="17.7,9 21,12 17.7,15" fill="#ffccbc" stroke="#d7a98c" stroke-width="0.4"/>
-            <polygon points="20.3,10.6 22.5,12 20.3,13.4" fill="#212121"/>
+            <rect x="1.5" y="9" width="3.2" height="6" rx="0.6"
+              fill="#f06292" stroke="#ad1457" stroke-width="0.4"/>
+            <rect x="4.7" y="9" width="2" height="6"
+              fill="#cfd8dc" stroke="#90a4ae" stroke-width="0.4"/>
+            <rect x="6.7" y="9" width="11" height="6"
+              fill="#1565c0" stroke="#0d47a1" stroke-width="0.4"/>
+            <polygon points="17.7,9 21,12 17.7,15"
+              fill="#ffccbc" stroke="#d7a98c" stroke-width="0.4"/>
+            <polygon points="20.3,10.6 22.5,12 20.3,13.4"
+              fill="#212121"/>
           </g>
         </svg>
       </span>
     </button>
-    <button id="animateBtn" onclick="animateChar()"><span class="play-triangle"></span></button>
+
+    <button id="animateBtn" onclick="animateChar()">
+      <span class="play-triangle"></span>
+    </button>
+
     <button id="hintToggleBtn" onclick="toggleHint()">💡</button>
-    <button id="outlineToggleBtn" onclick="toggleOutline()"><span class="mini-grid" id="miniGridIcon"><span id="miniGridChar">我</span></span></button>
-    <button id="helpBtn" onclick="toggleHelp()"><span class="help-mark">?</span></button>
+
+    <button id="outlineToggleBtn" onclick="toggleOutline()">
+      <span class="mini-grid" id="miniGridIcon">
+        <span id="miniGridChar">我</span>
+      </span>
+    </button>
+
+    <button id="helpBtn" onclick="toggleHelp()">
+      <span class="help-mark">?</span>
+    </button>
+
   </div>
 
   <div class="contact-text" id="contactTextContainer"></div>
 
-  <div style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;" id="footerCreditContainer"></div>
+  <div
+    style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;"
+    id="footerCreditContainer">
+  </div>
 
   <div class="version-text">Version 0.07</div>
 
   <script>
-    // ============== ระบบแปลภาษาตาม OS/Browser Language (รองรับ ไทย, อังกฤษ, จีนตัวย่อ, จีนตัวเต็ม) ==============
+    // =====================================================
+    // ระบบเลือกภาษาตามภาษา OS / Browser
+    // รองรับ ไทย อังกฤษ จีนตัวย่อ และจีนตัวเต็ม
+    // ภาษาอื่นใช้ภาษาอังกฤษ
+    // =====================================================
+
     const TRANSLATIONS = {
       th: {
-        description: "คำบรรยาย", search: "ค้นหา", restart: "เริ่มฝึกเขียนใหม่",
-        animate: "ดูตัวอย่างลำดับขีด", hintOn: "กะพริบนำทาง : เปิด", hintOff: "กะพริบนำทาง : ปิด",
-        outlineOn: "ตัวอักษรสีเทา : เปิด", outlineOff: "ตัวอักษรสีเทา : ปิด", help: "วิธีใช้",
-        notFound: "ไม่พบข้อมูล", pinyin: "พินอิน", meaning: "ความหมาย",
-        strokes: "จำนวนขีด", radical: "ตัวอักษรนำ",
+        placeholder: "พิมพ์อักษรจีน เช่น 你好",
+        description: "คำบรรยาย",
+        search: "ค้นหา",
+        restart: "เริ่มฝึกเขียนใหม่",
+        animate: "ดูตัวอย่างลำดับขีด",
+        hintOn: "กะพริบนำทาง : เปิด",
+        hintOff: "กะพริบนำทาง : ปิด",
+        outlineOn: "ตัวอักษรสีเทา : เปิด",
+        outlineOff: "ตัวอักษรสีเทา : ปิด",
+        help: "วิธีใช้",
+        notFound: "ไม่พบข้อมูล",
+        pinyin: "พินอิน",
+        meaning: "ความหมาย",
+        strokes: "จำนวนขีด",
+        radical: "ตัวอักษรนำ",
         descTitle: "คำบรรยายตัวอักษร",
         helpTitle: "วิธีใช้งาน",
-        helpIntro: "เมื่อใส่อักษรจีนในช่องค้นหา จะมีอักษรแสดงในแถวถัดมา จากนั้นสามารถเลือกอักษรที่ต้องการฝึกเขียนได้",
+
+        helpIntro:
+          "เมื่อใส่อักษรจีนในช่องค้นหา จะมีอักษรแสดงในแถวถัดมา จากนั้นสามารถเลือกอักษรที่ต้องการฝึกเขียนได้",
+
         helpItems: [
           "คำบรรยาย: แสดงจำนวนขีด ความหมาย ตัวอักษรนำ และพินอิน",
           "เริ่มฝึกเขียนใหม่: ฝึกเขียนโดยลากเส้นตามลำดับขีด เริ่มจากขีดแรกจะมีกะพริบนำทาง หากเปิดใช้งานปุ่มกะพริบ",
@@ -268,18 +518,36 @@
           "ตัวอักษรสีเทา: เปิด/ปิดเงาตัวอักษรพื้นหลังสีเทา",
           "วิธีใช้: แสดงคำอธิบายการใช้งานนี้"
         ],
-        contactMsg: "หากต้องการติดต่อผู้พัฒนาโปรแกรม เพื่อแนะนำหรือแจ้งปัญหาการใช้งาน<br>ติดต่อ E-mail: jirawat.teng@gmail.com",
-        creditMsg: 'ข้อมูลตัวอักษรและลำดับขีดจาก <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
+
+        contactMsg:
+          "หากต้องการติดต่อผู้พัฒนาโปรแกรม เพื่อแนะนำหรือแจ้งปัญหาการใช้งาน<br>ติดต่อ E-mail: jirawat.teng@gmail.com",
+
+        creditMsg:
+          'ข้อมูลตัวอักษรและลำดับขีดจาก <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener noreferrer" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
+
       en: {
-        description: "Description", search: "Search", restart: "Restart practice",
-        animate: "Show stroke order", hintOn: "Stroke hint: On", hintOff: "Stroke hint: Off",
-        outlineOn: "Gray character: On", outlineOff: "Gray character: Off", help: "Help",
-        notFound: "Not found", pinyin: "Pinyin", meaning: "Meaning",
-        strokes: "Stroke count", radical: "Radical",
+        placeholder: "Enter Chinese characters, e.g. 你好",
+        description: "Description",
+        search: "Search",
+        restart: "Restart practice",
+        animate: "Show stroke order",
+        hintOn: "Stroke hint: On",
+        hintOff: "Stroke hint: Off",
+        outlineOn: "Gray character: On",
+        outlineOff: "Gray character: Off",
+        help: "Help",
+        notFound: "Not found",
+        pinyin: "Pinyin",
+        meaning: "Meaning",
+        strokes: "Stroke count",
+        radical: "Radical",
         descTitle: "Character Description",
         helpTitle: "How to use",
-        helpIntro: "Type a Chinese character in the search box, and the characters will appear in the row below. You can then select a character to practice writing.",
+
+        helpIntro:
+          "Type a Chinese character in the search box, and the characters will appear in the row below. You can then select a character to practice writing.",
+
         helpItems: [
           "Description: shows stroke count, meaning, radical, and pinyin.",
           "Restart practice: practice writing by tracing strokes in order. The first stroke shows a hint, which blinks if the hint button is enabled.",
@@ -288,18 +556,36 @@
           "Gray character: toggles the gray background character outline.",
           "Help: shows this usage guide."
         ],
-        contactMsg: "If you want to contact the developer for suggestions or issue reports,<br>please contact E-mail: jirawat.teng@gmail.com",
-        creditMsg: 'Character data and stroke order from <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
+
+        contactMsg:
+          "If you want to contact the developer for suggestions or issue reports,<br>please contact E-mail: jirawat.teng@gmail.com",
+
+        creditMsg:
+          'Character data and stroke order from <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener noreferrer" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
+
       "zh-hans": {
-        description: "说明", search: "搜索", restart: "重新练习",
-        animate: "查看笔顺", hintOn: "笔顺提示：开", hintOff: "笔顺提示：关",
-        outlineOn: "灰色字形：开", outlineOff: "灰色字形：关", help: "帮助",
-        notFound: "未找到", pinyin: "拼音", meaning: "释义",
-        strokes: "笔画数", radical: "部首",
+        placeholder: "输入汉字，例如 你好",
+        description: "说明",
+        search: "搜索",
+        restart: "重新练习",
+        animate: "查看笔顺",
+        hintOn: "笔顺提示：开",
+        hintOff: "笔顺提示：关",
+        outlineOn: "灰色字形：开",
+        outlineOff: "灰色字形：关",
+        help: "帮助",
+        notFound: "未找到",
+        pinyin: "拼音",
+        meaning: "释义",
+        strokes: "笔画数",
+        radical: "部首",
         descTitle: "汉字说明",
         helpTitle: "使用说明",
-        helpIntro: "在搜索框中输入汉字后，下方会显示字符列表，可选择要练习的字。",
+
+        helpIntro:
+          "在搜索框中输入汉字后，下方会显示字符列表，可选择要练习的字。",
+
         helpItems: [
           "说明：显示笔画数、释义、部首和拼音。",
           "重新练习：按笔顺描摹练习，第一笔会有提示，若开启提示按钮会闪烁。",
@@ -308,18 +594,36 @@
           "灰色字形：切换灰色背景字形显示。",
           "帮助：显示本使用说明。"
         ],
-        contactMsg: "如需联系开发者提出建议或反馈问题，<br>请联系 E-mail: jirawat.teng@gmail.com",
-        creditMsg: '汉字数据与笔顺来自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
+
+        contactMsg:
+          "如需联系开发者提出建议或反馈问题，<br>请联系 E-mail: jirawat.teng@gmail.com",
+
+        creditMsg:
+          '汉字数据与笔顺来自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener noreferrer" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
+
       "zh-hant": {
-        description: "說明", search: "搜尋", restart: "重新練習",
-        animate: "查看筆順", hintOn: "筆順提示：開", hintOff: "筆順提示：關",
-        outlineOn: "灰階字形：開", outlineOff: "灰階字形：關", help: "說明",
-        notFound: "未找到", pinyin: "拼音", meaning: "釋義",
-        strokes: "筆畫數", radical: "部首",
+        placeholder: "輸入漢字，例如 你好",
+        description: "說明",
+        search: "搜尋",
+        restart: "重新練習",
+        animate: "查看筆順",
+        hintOn: "筆順提示：開",
+        hintOff: "筆順提示：關",
+        outlineOn: "灰階字形：開",
+        outlineOff: "灰階字形：關",
+        help: "說明",
+        notFound: "未找到",
+        pinyin: "拼音",
+        meaning: "釋義",
+        strokes: "筆畫數",
+        radical: "部首",
         descTitle: "漢字說明",
         helpTitle: "使用說明",
-        helpIntro: "在搜尋框中輸入漢字後，下方會顯示字符清單，可選擇要練習的字。",
+
+        helpIntro:
+          "在搜尋框中輸入漢字後，下方會顯示字符清單，可選擇要練習的字。",
+
         helpItems: [
           "說明：顯示筆畫數、釋義、部首和拼音。",
           "重新練習：按筆順描摹練習，第一筆會有提示，若開啟提示按鈕會閃爍。",
@@ -328,34 +632,82 @@
           "灰階字形：切換灰色背景字形顯示。",
           "說明：顯示本使用說明。"
         ],
-        contactMsg: "如需聯繫開發者提出建議或反饋問題，<br>請聯繫 E-mail: jirawat.teng@gmail.com",
-        creditMsg: '漢字數據與筆順來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
+
+        contactMsg:
+          "如需聯繫開發者提出建議或反饋問題，<br>請聯繫 E-mail: jirawat.teng@gmail.com",
+
+        creditMsg:
+          '漢字數據與筆順來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener noreferrer" style="color: #ff9800;">Make Me a Hanzi</a>'
       }
     };
 
+
+    // =====================================================
+    // เลือกภาษาจาก navigator.language
+    // th       = ภาษาไทย
+    // en       = ภาษาอังกฤษ
+    // zh-Hans  = จีนตัวย่อ
+    // zh-Hant  = จีนตัวเต็ม
+    // ภาษาอื่น = ภาษาอังกฤษ
+    // =====================================================
+
     function getLangDict() {
       const lang = (navigator.language || 'en').toLowerCase();
-      if (lang.startsWith('th')) return TRANSLATIONS.th;
+
+      if (lang.startsWith('th')) {
+        return TRANSLATIONS.th;
+      }
+
       if (lang.startsWith('zh')) {
-        if (lang.includes('tw') || lang.includes('hk') || lang.includes('mo') || lang.includes('hant')) {
+        if (
+          lang.includes('tw') ||
+          lang.includes('hk') ||
+          lang.includes('mo') ||
+          lang.includes('hant')
+        ) {
           return TRANSLATIONS['zh-hant'];
         }
+
         return TRANSLATIONS['zh-hans'];
       }
-      return TRANSLATIONS.en; // นอกเหนือจากนี้เป็นภาษาอังกฤษ
+
+      return TRANSLATIONS.en;
     }
+
     const T = getLangDict();
 
-    // แสดงข้อความส่วนติดต่อและเครดิตตามภาษาของ OS
+
+    // เปลี่ยนภาษาเอกสารตามภาษาที่เลือก
+    function setDocumentLanguage() {
+      if (T === TRANSLATIONS.th) {
+        document.documentElement.lang = 'th';
+      } else if (T === TRANSLATIONS.en) {
+        document.documentElement.lang = 'en';
+      } else if (T === TRANSLATIONS['zh-hant']) {
+        document.documentElement.lang = 'zh-Hant';
+      } else {
+        document.documentElement.lang = 'zh-Hans';
+      }
+    }
+
+    setDocumentLanguage();
+
+
+    // แสดงข้อความส่วนติดต่อและเครดิตตามภาษาเครื่อง
     document.getElementById('contactTextContainer').innerHTML = T.contactMsg;
     document.getElementById('footerCreditContainer').innerHTML = T.creditMsg;
+
 
     // ไอคอนสำหรับแสดงในเมนูวิธีใช้
     const HELP_ICONS = {
       search: '🔍',
       items: [
         '<span class="css-book" style="width:18px;height:14px;vertical-align:middle;"><span class="page-left"></span><span class="page-right"></span></span>',
-        '✏️', '▶️', '💡', null, '<span class="help-icon-btn" style="width:18px;height:18px;font-size:12px;">?</span>'
+        '✏️',
+        '▶️',
+        '💡',
+        null,
+        '<span class="help-icon-btn" style="width:18px;height:18px;font-size:12px;">?</span>'
       ]
     };
 
@@ -363,22 +715,32 @@
       return '<span class="mini-grid inline-small"><span>我</span></span>';
     }
 
-    // ============== ตัวแปรสถานะ ==============
+
+    // =====================================================
+    // ตัวแปรสถานะ
+    // =====================================================
+
     let db = null;
     let writer = null;
     let currentChar = '';
 
     const HINT_INTERVAL_MS = 1500;
+
     let hintEnabled = true;
     let hintTimer = null;
     let hintStrokeNum = 0;
     let outlineEnabled = true;
     let quizActive = false;
-    let activePanel = null; // null | 'desc' | 'help'
+    let activePanel = null;
     let lastCharData = null;
 
-    // ===== คำนวณขนาดกระดานแบบ responsive =====
+
+    // =====================================================
+    // คำนวณขนาดกระดานแบบ Responsive
+    // =====================================================
+
     let BOX_SIZE = 280;
+
     function computeBoxSize() {
       const size = Math.round(Math.min(window.innerWidth * 0.92, 380));
       return Math.max(size, 220);
@@ -386,6 +748,7 @@
 
     function applyBoxSize() {
       BOX_SIZE = computeBoxSize();
+
       const gridBox = document.getElementById('gridBox');
       const gridBg = document.getElementById('gridBg');
       const writerLayer = document.getElementById('writer-target');
@@ -406,49 +769,99 @@
       overlayPanel.style.height = BOX_SIZE + 'px';
 
       const rect = gridBg.querySelector('rect');
+
       rect.setAttribute('width', BOX_SIZE - 4);
       rect.setAttribute('height', BOX_SIZE - 4);
 
       const lines = gridBg.querySelectorAll('line');
-      lines[0].setAttribute('x1', 0); lines[0].setAttribute('y1', 0);
-      lines[0].setAttribute('x2', BOX_SIZE); lines[0].setAttribute('y2', BOX_SIZE);
 
-      lines[1].setAttribute('x1', BOX_SIZE); lines[1].setAttribute('y1', 0);
-      lines[1].setAttribute('x2', 0); lines[1].setAttribute('y2', BOX_SIZE);
+      lines[0].setAttribute('x1', 0);
+      lines[0].setAttribute('y1', 0);
+      lines[0].setAttribute('x2', BOX_SIZE);
+      lines[0].setAttribute('y2', BOX_SIZE);
 
-      lines[2].setAttribute('x1', BOX_SIZE / 2); lines[2].setAttribute('y1', 0);
-      lines[2].setAttribute('x2', BOX_SIZE / 2); lines[2].setAttribute('y2', BOX_SIZE);
+      lines[1].setAttribute('x1', BOX_SIZE);
+      lines[1].setAttribute('y1', 0);
+      lines[1].setAttribute('x2', 0);
+      lines[1].setAttribute('y2', BOX_SIZE);
 
-      lines[3].setAttribute('x1', 0); lines[3].setAttribute('y1', BOX_SIZE / 2);
-      lines[3].setAttribute('x2', BOX_SIZE); lines[3].setAttribute('y2', BOX_SIZE / 2);
+      lines[2].setAttribute('x1', BOX_SIZE / 2);
+      lines[2].setAttribute('y1', 0);
+      lines[2].setAttribute('x2', BOX_SIZE / 2);
+      lines[2].setAttribute('y2', BOX_SIZE);
+
+      lines[3].setAttribute('x1', 0);
+      lines[3].setAttribute('y1', BOX_SIZE / 2);
+      lines[3].setAttribute('x2', BOX_SIZE);
+      lines[3].setAttribute('y2', BOX_SIZE / 2);
     }
+
 
     window.addEventListener('resize', () => {
       const oldSize = BOX_SIZE;
+
       applyBoxSize();
+
       if (oldSize !== BOX_SIZE && currentChar) {
         const activeEl = document.querySelector('.char-item.active');
         selectCharacter(currentChar, activeEl);
       }
     });
 
+
+    // =====================================================
+    // รวมฐานข้อมูล SQLite ทั้ง 3 ไฟล์
+    // =====================================================
+
     function appendDatabase(SQL, targetDb, b64Data) {
-      if (typeof b64Data !== 'undefined') {
-        const binStr = window.atob(b64Data);
-        const bytes = new Uint8Array(binStr.length);
-        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
-        const subDb = new SQL.Database(bytes);
-        const res = subDb.exec("SELECT * FROM characters");
+      if (typeof b64Data === 'undefined') {
+        return;
+      }
+
+      const binStr = window.atob(b64Data);
+      const bytes = new Uint8Array(binStr.length);
+
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+
+      const subDb = new SQL.Database(bytes);
+
+      try {
+        const res = subDb.exec('SELECT * FROM characters');
+
         if (res.length > 0) {
-          targetDb.exec("BEGIN TRANSACTION;");
-          const stmt = targetDb.prepare("INSERT OR REPLACE INTO characters VALUES (?, ?, ?, ?, ?, ?)");
-          res[0].values.forEach(row => stmt.run(row));
-          stmt.free();
-          targetDb.exec("COMMIT;");
+          targetDb.exec('BEGIN TRANSACTION;');
+
+          const stmt = targetDb.prepare(
+            'INSERT OR REPLACE INTO characters VALUES (?, ?, ?, ?, ?, ?)'
+          );
+
+          try {
+            res[0].values.forEach(row => stmt.run(row));
+          } finally {
+            stmt.free();
+          }
+
+          targetDb.exec('COMMIT;');
         }
+      } catch (err) {
+        try {
+          targetDb.exec('ROLLBACK;');
+        } catch (rollbackError) {
+          // ไม่มี transaction ให้ rollback
+        }
+
+        throw err;
+      } finally {
         subDb.close();
       }
     }
+
+
+    // =====================================================
+    // เริ่มต้นโปรแกรม
+    // =====================================================
 
     window.onload = async function() {
       applyBoxSize();
@@ -457,89 +870,189 @@
 
       try {
         const SQL = await initSqlJs({
-          locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`
+          locateFile: f =>
+            `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`
         });
 
         db = new SQL.Database();
-        db.run("CREATE TABLE characters (char TEXT PRIMARY KEY, pinyin TEXT, words TEXT, stroke_count INTEGER, radical TEXT, stroke_data TEXT);");
 
-        appendDatabase(SQL, db, typeof COMMON_SQLITE_BASE64 !== 'undefined' ? COMMON_SQLITE_BASE64 : undefined);
-        appendDatabase(SQL, db, typeof EXTRA1_SQLITE_BASE64 !== 'undefined' ? EXTRA1_SQLITE_BASE64 : undefined);
-        appendDatabase(SQL, db, typeof EXTRA2_SQLITE_BASE64 !== 'undefined' ? EXTRA2_SQLITE_BASE64 : undefined);
+        db.run(`
+          CREATE TABLE characters (
+            char TEXT PRIMARY KEY,
+            pinyin TEXT,
+            words TEXT,
+            stroke_count INTEGER,
+            radical TEXT,
+            stroke_data TEXT
+          );
+        `);
 
-        console.log("✅ โหลดและรวมฐานข้อมูลทั้ง 3 ไฟล์สำเร็จเรียบร้อย!");
+        appendDatabase(
+          SQL,
+          db,
+          typeof COMMON_SQLITE_BASE64 !== 'undefined'
+            ? COMMON_SQLITE_BASE64
+            : undefined
+        );
+
+        appendDatabase(
+          SQL,
+          db,
+          typeof EXTRA1_SQLITE_BASE64 !== 'undefined'
+            ? EXTRA1_SQLITE_BASE64
+            : undefined
+        );
+
+        appendDatabase(
+          SQL,
+          db,
+          typeof EXTRA2_SQLITE_BASE64 !== 'undefined'
+            ? EXTRA2_SQLITE_BASE64
+            : undefined
+        );
+
+        console.log('โหลดและรวมฐานข้อมูลทั้ง 3 ไฟล์สำเร็จ!');
+
       } catch (err) {
-        console.error("เกิดข้อผิดพลาดในการโหลดฐานข้อมูล:", err);
+        console.error('เกิดข้อผิดพลาดในการโหลดฐานข้อมูล:', err);
       }
     };
 
+
+    // =====================================================
+    // กำหนดข้อความและ Tooltip ตามภาษาเครื่อง
+    // =====================================================
+
     function initTooltips() {
+      // จุดที่เพิ่มเพื่อเปลี่ยนข้อความในช่องค้นหาตามภาษาเครื่อง
+      document.getElementById('charInput').placeholder = T.placeholder;
+
+      // เปลี่ยนข้อความ Tooltip ของปุ่มต่าง ๆ
       document.getElementById('searchBtn').title = T.search;
       document.getElementById('descBtn').title = T.description;
       document.getElementById('restartBtn').title = T.restart;
       document.getElementById('animateBtn').title = T.animate;
-      document.getElementById('hintToggleBtn').title = hintEnabled ? T.hintOn : T.hintOff;
-      document.getElementById('outlineToggleBtn').title = outlineEnabled ? T.outlineOn : T.outlineOff;
+
+      document.getElementById('hintToggleBtn').title =
+        hintEnabled ? T.hintOn : T.hintOff;
+
+      document.getElementById('outlineToggleBtn').title =
+        outlineEnabled ? T.outlineOn : T.outlineOff;
+
       document.getElementById('helpBtn').title = T.help;
     }
 
+
+    // =====================================================
+    // ค้นหาข้อมูลอักษรจีนจากฐานข้อมูล
+    // =====================================================
+
     function queryCharFromDB(char) {
-      if (!db) return null;
-      const stmt = db.prepare("SELECT * FROM characters WHERE char = :char");
-      const result = stmt.getAsObject({ ':char': char });
-      stmt.free();
+      if (!db) {
+        return null;
+      }
+
+      const stmt = db.prepare(
+        'SELECT * FROM characters WHERE char = :char'
+      );
+
+      let result;
+
+      try {
+        result = stmt.getAsObject({ ':char': char });
+      } finally {
+        stmt.free();
+      }
+
       return result.char ? result : null;
     }
 
-    // ============== แผ่นซ้อนทับ: คำบรรยาย / วิธีใช้ ==============
+
+    // =====================================================
+    // แผ่นซ้อนทับ: คำบรรยาย / วิธีใช้
+    // =====================================================
+
     function renderDescriptionContent() {
       const panel = document.getElementById('overlayPanel');
+
       if (!lastCharData) {
         panel.innerHTML = `<h3>${T.descTitle}</h3><p>${T.notFound}</p>`;
         return;
       }
+
       panel.innerHTML = `
         <h3>${T.descTitle}</h3>
-        <div class="info-row"><span class="info-label">${T.pinyin}:</span> <span class="info-value">${lastCharData.pinyin || '-'}</span></div>
-        <div class="info-row"><span class="info-label">${T.meaning}:</span> <span class="info-value">${lastCharData.words || '-'}</span></div>
-        <div class="info-row"><span class="info-label">${T.strokes}:</span> <span class="info-value">${lastCharData.stroke_count || '-'}</span></div>
-        <div class="info-row"><span class="info-label">${T.radical}:</span> <span class="info-value">${lastCharData.radical || '-'}</span></div>
+
+        <div class="info-row">
+          <span class="info-label">${T.pinyin}:</span>
+          <span class="info-value">${lastCharData.pinyin || '-'}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">${T.meaning}:</span>
+          <span class="info-value">${lastCharData.words || '-'}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">${T.strokes}:</span>
+          <span class="info-value">${lastCharData.stroke_count || '-'}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">${T.radical}:</span>
+          <span class="info-value">${lastCharData.radical || '-'}</span>
+        </div>
       `;
     }
 
+
     function renderHelpContent() {
       const panel = document.getElementById('overlayPanel');
+
       let html = `<h3>${T.helpTitle}</h3>`;
+
       html += `<p>${HELP_ICONS.search} ${T.helpIntro}</p>`;
+
       T.helpItems.forEach((line, idx) => {
-        const icon = HELP_ICONS.items[idx] !== null ? HELP_ICONS.items[idx] : miniGridIconHtml();
+        const icon =
+          HELP_ICONS.items[idx] !== null
+            ? HELP_ICONS.items[idx]
+            : miniGridIconHtml();
+
         html += `<p>${icon} ${line}</p>`;
       });
+
       panel.innerHTML = html;
     }
+
 
     function showPanel() {
       document.getElementById('overlayPanel').classList.add('show');
     }
+
     function hidePanel() {
       document.getElementById('overlayPanel').classList.remove('show');
     }
 
-    // เปิดคำบรรยาย
+
     function toggleDescription() {
       activePanel = 'desc';
       renderDescriptionContent();
       showPanel();
     }
 
-    // เปิดวิธีใช้
+
     function toggleHelp() {
       activePanel = 'help';
       renderHelpContent();
       showPanel();
     }
 
-    // ============== กะพริบนำทาง ==============
+
+    // =====================================================
+    // ระบบกะพริบนำทาง
+    // =====================================================
+
     function stopHintLoop() {
       if (hintTimer) {
         clearInterval(hintTimer);
@@ -547,11 +1060,16 @@
       }
     }
 
+
     function startHintLoop() {
       stopHintLoop();
-      if (!writer || !hintEnabled || !quizActive) return;
+
+      if (!writer || !hintEnabled || !quizActive) {
+        return;
+      }
 
       writer.highlightStroke(hintStrokeNum);
+
       hintTimer = setInterval(() => {
         if (writer && quizActive && hintEnabled) {
           writer.highlightStroke(hintStrokeNum);
@@ -561,8 +1079,12 @@
       }, HINT_INTERVAL_MS);
     }
 
+
     function flashOnMistake() {
-      if (!writer || !quizActive) return;
+      if (!writer || !quizActive) {
+        return;
+      }
+
       if (hintEnabled) {
         startHintLoop();
       } else {
@@ -570,56 +1092,101 @@
       }
     }
 
+
     function toggleHint() {
       hintEnabled = !hintEnabled;
+
       const btn = document.getElementById('hintToggleBtn');
+
       btn.title = hintEnabled ? T.hintOn : T.hintOff;
       btn.classList.toggle('off', !hintEnabled);
-      btn.innerHTML = hintEnabled ? '<span class="bulb-on">💡</span>' : '💡';
 
-      if (hintEnabled && quizActive) startHintLoop();
-      else stopHintLoop();
+      btn.innerHTML = hintEnabled
+        ? '<span class="bulb-on">💡</span>'
+        : '💡';
+
+      if (hintEnabled && quizActive) {
+        startHintLoop();
+      } else {
+        stopHintLoop();
+      }
     }
 
-    // ============== ตัวอักษรสีเทา (outline) ==============
+
+    // =====================================================
+    // ระบบเปิด / ปิดตัวอักษรสีเทา
+    // =====================================================
+
     function updateOutlineIcon() {
       const miniChar = document.getElementById('miniGridChar');
       const btn = document.getElementById('outlineToggleBtn');
+
       miniChar.style.display = outlineEnabled ? 'inline' : 'none';
+
       btn.title = outlineEnabled ? T.outlineOn : T.outlineOff;
       btn.classList.toggle('off', !outlineEnabled);
     }
 
+
     function toggleOutline() {
       outlineEnabled = !outlineEnabled;
+
       updateOutlineIcon();
 
       if (writer) {
-        if (outlineEnabled) writer.showOutline();
-        else writer.hideOutline();
+        if (outlineEnabled) {
+          writer.showOutline();
+        } else {
+          writer.hideOutline();
+        }
       }
     }
+
+
+    // =====================================================
+    // จัดการ HanziWriter
+    // =====================================================
 
     function destroyWriter() {
       stopHintLoop();
       quizActive = false;
+
       if (writer) {
-        try { writer.cancelQuiz(); } catch (e) {}
+        try {
+          writer.cancelQuiz();
+        } catch (e) {
+          // ไม่มี Quiz ที่กำลังทำงาน
+        }
+
         writer = null;
       }
+
       document.getElementById('writer-target').innerHTML = '';
     }
 
+
     function clearScreen() {
       destroyWriter();
+
       currentChar = '';
       lastCharData = null;
+
       document.getElementById('charList').innerHTML = '';
-      if (activePanel === 'desc') renderDescriptionContent();
+
+      if (activePanel === 'desc') {
+        renderDescriptionContent();
+      }
     }
 
+
+    // =====================================================
+    // แสดงรายการอักษรจีนที่ค้นหา
+    // =====================================================
+
     function renderCharList() {
-      const inputText = document.getElementById('charInput').value.trim();
+      const inputText =
+        document.getElementById('charInput').value.trim();
+
       const chars = inputText.match(/[\u4e00-\u9fa5]/g);
 
       if (!chars || chars.length === 0) {
@@ -627,35 +1194,67 @@
         return;
       }
 
-      if (!db) return;
+      if (!db) {
+        console.warn('ฐานข้อมูลยังโหลดไม่เสร็จ');
+        return;
+      }
 
       const charListDiv = document.getElementById('charList');
+
       charListDiv.innerHTML = '';
+
       chars.forEach((char, index) => {
         const item = document.createElement('div');
+
         item.className = 'char-item';
-        item.innerHTML = `<span>${char}</span>`;
+
+        const span = document.createElement('span');
+        span.textContent = char;
+
+        item.appendChild(span);
+
         item.onclick = () => selectCharacter(char, item);
+
         charListDiv.appendChild(item);
-        if (index === 0) selectCharacter(char, item);
+
+        if (index === 0) {
+          selectCharacter(char, item);
+        }
       });
     }
 
+
+    // =====================================================
+    // เลือกอักษรจีนเพื่อฝึกเขียน
+    // =====================================================
+
     function selectCharacter(char, element) {
       currentChar = char;
-      document.querySelectorAll('.char-item').forEach(el => el.classList.remove('active'));
-      if (element) element.classList.add('active');
+
+      document.querySelectorAll('.char-item').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      if (element) {
+        element.classList.add('active');
+      }
 
       const row = queryCharFromDB(char);
+
       lastCharData = row || null;
-      if (activePanel === 'desc') renderDescriptionContent();
+
+      if (activePanel === 'desc') {
+        renderDescriptionContent();
+      }
 
       destroyWriter();
 
       const dynamicPadding = Math.round(BOX_SIZE * 0.02);
 
       writer = HanziWriter.create('writer-target', char, {
-        width: BOX_SIZE, height: BOX_SIZE, padding: dynamicPadding,
+        width: BOX_SIZE,
+        height: BOX_SIZE,
+        padding: dynamicPadding,
         showCharacter: false,
         showOutline: outlineEnabled,
         drawingWidth: 25,
@@ -666,11 +1265,19 @@
       startQuiz();
     }
 
+
+    // =====================================================
+    // เริ่มฝึกเขียนอักษรจีน
+    // =====================================================
+
     function startQuiz() {
       activePanel = null;
       hidePanel();
 
-      if (!writer) return;
+      if (!writer) {
+        return;
+      }
+
       stopHintLoop();
       writer.cancelQuiz();
 
@@ -679,6 +1286,7 @@
 
       writer.quiz({
         showHintAfterMisses: false,
+
         onCorrectStroke: function(strokeData) {
           if (strokeData.strokesRemaining > 0) {
             hintStrokeNum = strokeData.strokeNum + 1;
@@ -688,10 +1296,12 @@
             stopHintLoop();
           }
         },
+
         onMistake: function(strokeData) {
           hintStrokeNum = strokeData.strokeNum;
           flashOnMistake();
         },
+
         onComplete: function(summaryData) {
           quizActive = false;
           stopHintLoop();
@@ -701,22 +1311,42 @@
       startHintLoop();
     }
 
+
+    // =====================================================
+    // เล่นภาพตัวอย่างลำดับขีด
+    // =====================================================
+
     function animateChar() {
       activePanel = null;
       hidePanel();
 
-      if (!writer) return;
+      if (!writer) {
+        return;
+      }
+
       quizActive = false;
       stopHintLoop();
+
       writer.cancelQuiz();
+
       writer.animateCharacter({
-        onComplete: function() {}
+        onComplete: function() {
+          // จบการแสดงภาพตัวอย่าง
+        }
       });
     }
 
-    document.getElementById('charInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') renderCharList();
-    });
+
+    // กด Enter เพื่อค้นหาอักษรจีน
+    document.getElementById('charInput').addEventListener(
+      'keydown',
+      function(e) {
+        if (e.key === 'Enter') {
+          renderCharList();
+        }
+      }
+    );
+
   </script>
 </body>
 </html>
