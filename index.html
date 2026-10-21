@@ -120,6 +120,46 @@
     /* ไอคอนดินสอ วาดด้วย SVG ให้ขยายใหญ่เกือบเต็มปุ่ม */
     .pencil-icon svg { width: 42px; height: 42px; display: block; }
 
+    /* รูปหนังสือเปิด วาดด้วย Pure CSS ให้สมจริงและรองรับทุกลินุกซ์/เบราว์เซอร์ */
+    .css-book {
+      position: relative;
+      width: 28px;
+      height: 20px;
+      background: #fff;
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      display: inline-block;
+    }
+    .css-book::before {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0; left: 50%;
+      width: 2px;
+      background: #b71c1c;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+    /* หน้าหนังสือซ้าย */
+    .css-book .page-left {
+      position: absolute;
+      top: 1px; bottom: 1px; left: 1px; right: 50%;
+      background: #fff;
+      border-top-left-radius: 2px;
+      border-bottom-left-radius: 2px;
+      border-left: 1px solid #ef9a9a;
+      box-shadow: inset -2px 0 3px rgba(0,0,0,0.08);
+    }
+    /* หน้าหนังสือขวา */
+    .css-book .page-right {
+      position: absolute;
+      top: 1px; bottom: 1px; left: 50%; right: 1px;
+      background: #fff;
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+      border-right: 1px solid #ef9a9a;
+      box-shadow: inset 2px 0 3px rgba(0,0,0,0.08);
+    }
+
     /* ตัวหนังสือ ? สีเขียว ขยายใหญ่และหนาขึ้น สำหรับปุ่มวิธีใช้ */
     .help-mark {
       color: #2e7d32;
@@ -180,7 +220,9 @@
   </div>
 
   <div class="controls">
-    <button id="descBtn" onclick="toggleDescription()">📖</button>
+    <button id="descBtn" onclick="toggleDescription()">
+      <span class="css-book"><span class="page-left"></span><span class="page-right"></span></span>
+    </button>
     <button id="restartBtn" onclick="startQuiz()">
       <span class="pencil-icon">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -200,26 +242,21 @@
     <button id="helpBtn" onclick="toggleHelp()"><span class="help-mark">?</span></button>
   </div>
 
-  <div class="contact-text">
-    หากต้องการติดต่อผู้พัฒนาโปรแกรม เพื่อแนะนำหรือแจ้งปัญหาการใช้งาน<br>
-    ติดต่อ E-mail: jirawat.teng@gmail.com
-  </div>
+  <div class="contact-text" id="contactTextContainer"></div>
 
-  <div style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">
-    ข้อมูลตัวอักษรและลำดับขีดจาก <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>
-  </div>
+  <div style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;" id="footerCreditContainer"></div>
 
-  <div class="version-text">Version 0.05</div>
+  <div class="version-text">Version 0.07</div>
 
   <script>
-    // ============== ระบบแปลภาษา: รองรับ ไทย / อังกฤษ / จีนตัวย่อ / จีนตัวเต็ม เท่านั้น ==============
+    // ============== ระบบแปลภาษาตาม OS/Browser Language (รองรับ ไทย, อังกฤษ, จีนตัวย่อ, จีนตัวเต็ม) ==============
     const TRANSLATIONS = {
       th: {
         description: "คำบรรยาย", search: "ค้นหา", restart: "เริ่มฝึกเขียนใหม่",
         animate: "ดูตัวอย่างลำดับขีด", hintOn: "กะพริบนำทาง : เปิด", hintOff: "กะพริบนำทาง : ปิด",
         outlineOn: "ตัวอักษรสีเทา : เปิด", outlineOff: "ตัวอักษรสีเทา : ปิด", help: "วิธีใช้",
-        notFound: "ไม่พบข้อมูล", pinyin: "拼音 (พินอิน)", meaning: "释义 (ความหมาย)",
-        strokes: "笔画数 (จำนวนขีด)", radical: "部首 (ตัวอักษรนำ)",
+        notFound: "ไม่พบข้อมูล", pinyin: "พินอิน", meaning: "ความหมาย",
+        strokes: "จำนวนขีด", radical: "ตัวอักษรนำ",
         descTitle: "คำบรรยายตัวอักษร",
         helpTitle: "วิธีใช้งาน",
         helpIntro: "เมื่อใส่อักษรจีนในช่องค้นหา จะมีอักษรแสดงในแถวถัดมา จากนั้นสามารถเลือกอักษรที่ต้องการฝึกเขียนได้",
@@ -230,7 +267,9 @@
           "กะพริบนำทาง: กะพริบแสดงขีดถัดไปที่ต้องเขียน",
           "ตัวอักษรสีเทา: เปิด/ปิดเงาตัวอักษรพื้นหลังสีเทา",
           "วิธีใช้: แสดงคำอธิบายการใช้งานนี้"
-        ]
+        ],
+        contactMsg: "หากต้องการติดต่อผู้พัฒนาโปรแกรม เพื่อแนะนำหรือแจ้งปัญหาการใช้งาน<br>ติดต่อ E-mail: *******.****@*****.***",
+        creditMsg: 'ข้อมูลตัวอักษรและลำดับขีดจาก <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
       en: {
         description: "Description", search: "Search", restart: "Restart practice",
@@ -248,7 +287,9 @@
           "Stroke hint: blinks to show the next stroke to write.",
           "Gray character: toggles the gray background character outline.",
           "Help: shows this usage guide."
-        ]
+        ],
+        contactMsg: "If you want to contact the developer for suggestions or issue reports,<br>please contact E-mail: *******.****@*****.***",
+        creditMsg: 'Character data and stroke order from <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
       "zh-hans": {
         description: "说明", search: "搜索", restart: "重新练习",
@@ -266,7 +307,9 @@
           "笔顺提示：闪烁提示下一笔。",
           "灰色字形：切换灰色背景字形显示。",
           "帮助：显示本使用说明。"
-        ]
+        ],
+        contactMsg: "如需联系开发者提出建议或反馈问题，<br>请联系 E-mail: *******.****@*****.***",
+        creditMsg: '汉字数据与笔顺来自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
       },
       "zh-hant": {
         description: "說明", search: "搜尋", restart: "重新練習",
@@ -284,7 +327,9 @@
           "筆順提示：閃爍提示下一筆。",
           "灰階字形：切換灰色背景字形顯示。",
           "說明：顯示本使用說明。"
-        ]
+        ],
+        contactMsg: "如需聯繫開發者提出建議或反饋問題，<br>請聯繫 E-mail: *******.****@*****.***",
+        creditMsg: '漢字數據與筆順來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" style="color: #ff9800;">Make Me a Hanzi</a>'
       }
     };
 
@@ -297,15 +342,21 @@
         }
         return TRANSLATIONS['zh-hans'];
       }
-      if (lang.startsWith('en')) return TRANSLATIONS.en;
-      return TRANSLATIONS.en; // ภาษาอื่นทั้งหมด fallback เป็นอังกฤษ
+      return TRANSLATIONS.en; // นอกเหนือจากนี้เป็นภาษาอังกฤษ
     }
     const T = getLangDict();
 
-    // ไอคอนของแต่ละปุ่ม เรียงตามลำดับ: ค้นหา, คำบรรยาย, ฝึกเขียนใหม่, ดูตัวอย่างลำดับขีด, กะพริบนำทาง, ตัวอักษรสีเทา(ใช้ mini-grid), วิธีใช้(ใช้ปุ่มคำถามสีส้ม)
+    // แสดงข้อความส่วนติดต่อและเครดิตตามภาษาของ OS
+    document.getElementById('contactTextContainer').innerHTML = T.contactMsg;
+    document.getElementById('footerCreditContainer').innerHTML = T.creditMsg;
+
+    // ไอคอนสำหรับแสดงในเมนูวิธีใช้
     const HELP_ICONS = {
       search: '🔍',
-      items: ['📖', '✏️', '▶️', '💡', null, '<span class="help-icon-btn">?</span>']
+      items: [
+        '<span class="css-book" style="width:18px;height:14px;vertical-align:middle;"><span class="page-left"></span><span class="page-right"></span></span>',
+        '✏️', '▶️', '💡', null, '<span class="help-icon-btn" style="width:18px;height:18px;font-size:12px;">?</span>'
+      ]
     };
 
     function miniGridIconHtml() {
@@ -474,14 +525,14 @@
       document.getElementById('overlayPanel').classList.remove('show');
     }
 
-    // เปิดคำบรรยาย: กดปุ่มนี้แล้วแสดงเสมอ (ปิดได้โดยกดปุ่มอื่น เช่น ฝึกเขียน/ดูตัวอย่าง/วิธีใช้)
+    // เปิดคำบรรยาย
     function toggleDescription() {
       activePanel = 'desc';
       renderDescriptionContent();
       showPanel();
     }
 
-    // เปิดวิธีใช้: กดปุ่มนี้แล้วแสดงเสมอ (ปิดได้โดยกดปุ่มอื่น เช่น คำบรรยาย/ฝึกเขียน/ดูตัวอย่าง)
+    // เปิดวิธีใช้
     function toggleHelp() {
       activePanel = 'help';
       renderHelpContent();
@@ -616,7 +667,6 @@
     }
 
     function startQuiz() {
-      // กดปุ่มฝึกเขียนใหม่ -> ปิดแผงข้อความที่เปิดค้างอยู่ (ถ้ามี)
       activePanel = null;
       hidePanel();
 
@@ -652,7 +702,6 @@
     }
 
     function animateChar() {
-      // กดปุ่มดูตัวอย่างลำดับขีด -> ปิดแผงข้อความที่เปิดค้างอยู่ (ถ้ามี)
       activePanel = null;
       hidePanel();
 
