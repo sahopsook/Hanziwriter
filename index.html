@@ -446,7 +446,7 @@
     .controls {
       margin-top: 15px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
       max-width: 380px;
@@ -635,6 +635,94 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
+    /* ===== ไอคอนลำโพง วาดด้วย CSS ===== */
+    .speaker-icon {
+      position: relative;
+      width: 36px;
+      height: 28px;
+      display: block;
+      color: #fff;
+    }
+
+    .speaker-icon .spk-body {
+      position: absolute;
+      left: 3px;
+      top: 9px;
+      width: 7px;
+      height: 10px;
+      background: currentColor;
+      border-radius: 1px;
+    }
+
+    .speaker-icon .spk-cone {
+      position: absolute;
+      left: 9px;
+      top: 3px;
+      width: 0;
+      height: 0;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-right: 12px solid currentColor;
+    }
+
+    .speaker-icon .spk-wave {
+      position: absolute;
+      box-sizing: border-box;
+      border: 3px solid currentColor;
+      border-left-color: transparent;
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+    }
+
+    .speaker-icon .spk-wave1 {
+      left: 21px;
+      top: 8px;
+      width: 8px;
+      height: 12px;
+    }
+
+    .speaker-icon .spk-wave2 {
+      left: 23px;
+      top: 4px;
+      width: 12px;
+      height: 20px;
+    }
+
+    /* ขณะกำลังอ่านออกเสียง: คลื่นเสียงกะพริบ */
+    #speakBtn.speaking .spk-wave1 {
+      animation: spkPulse 0.7s infinite;
+    }
+
+    #speakBtn.speaking .spk-wave2 {
+      animation: spkPulse 0.7s infinite 0.25s;
+    }
+
+    @keyframes spkPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.15; }
+    }
+
+    /* ไอคอนลำโพงขนาดเล็กในหน้าวิธีใช้ */
+    .help-spk {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      background: #ff9800;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .help-spk .speaker-icon {
+      position: absolute;
+      top: 3px;
+      left: -1px;
+      transform: scale(0.55);
+      transform-origin: 0 0;
+    }
+
     .version-text {
       margin-top: 24px;
       margin-bottom: 8px;
@@ -750,6 +838,15 @@
       <span class="help-mark">?</span>
     </button>
 
+    <button id="speakBtn" onclick="speakChar()">
+      <span class="speaker-icon">
+        <span class="spk-body"></span>
+        <span class="spk-cone"></span>
+        <span class="spk-wave spk-wave1"></span>
+        <span class="spk-wave spk-wave2"></span>
+      </span>
+    </button>
+
   </div>
 
   <div class="contact-text" id="contactTextContainer"></div>
@@ -759,7 +856,7 @@
     id="footerCreditContainer">
   </div>
 
-  <div class="version-text">Version 0.11</div>
+  <div class="version-text">Version 0.12</div>
 
   <script>
     // =====================================================
@@ -778,6 +875,9 @@
         outlineOn: "ตัวอักษรสีเทา : เปิด",
         outlineOff: "ตัวอักษรสีเทา : ปิด",
         help: "วิธีใช้",
+        speak: "เสียงอ่าน",
+        speakNoSupport: "อุปกรณ์หรือเบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง",
+        speakNoVoice: "ไม่พบเสียงภาษาจีนในอุปกรณ์นี้ กรุณาติดตั้งเสียงภาษาจีนในการตั้งค่า Text-to-speech ของเครื่อง",
         notFound: "ไม่พบข้อมูล",
         pinyin: "พินอิน",
         meaning: "ความหมาย",
@@ -805,7 +905,8 @@
           "ดูตัวอย่างลำดับขีด: แสดงการลากเส้นอักษรทีละเส้นจนครบ",
           "กะพริบนำทาง: กะพริบแสดงขีดถัดไปที่ต้องเขียน",
           "ตัวอักษรสีเทา: เปิด/ปิดเงาตัวอักษรพื้นหลังสีเทา",
-          "วิธีใช้: แสดงคำอธิบายการใช้งานนี้"
+          "วิธีใช้: แสดงคำอธิบายการใช้งานนี้",
+          "เสียงอ่าน: กดเพื่อฟังเสียงอ่านของอักษรที่เลือก (ใช้เสียงอ่านภาษาจีนของอุปกรณ์ จึงต้องมีเสียงภาษาจีนติดตั้งในเครื่อง)"
         ],
 
         contactMsg:
@@ -826,6 +927,9 @@
         outlineOn: "Gray character: On",
         outlineOff: "Gray character: Off",
         help: "Help",
+        speak: "Pronounce",
+        speakNoSupport: "This device or browser does not support speech output.",
+        speakNoVoice: "No Chinese voice found on this device. Please install a Chinese voice in your Text-to-speech settings.",
         notFound: "Not found",
         pinyin: "Pinyin",
         meaning: "Meaning",
@@ -853,7 +957,8 @@
           "Show stroke order: plays the full stroke animation one by one.",
           "Stroke hint: blinks to show the next stroke to write.",
           "Gray character: toggles the gray background character outline.",
-          "Help: shows this usage guide."
+          "Help: shows this usage guide.",
+          "Pronounce: plays the spoken sound of the selected character (uses the Chinese voice installed on your device)."
         ],
 
         contactMsg:
@@ -874,6 +979,9 @@
         outlineOn: "灰色字形：开",
         outlineOff: "灰色字形：关",
         help: "帮助",
+        speak: "发音",
+        speakNoSupport: "此设备或浏览器不支持语音朗读。",
+        speakNoVoice: "此设备上未找到中文语音，请在文字转语音设置中安装中文语音。",
         notFound: "未找到",
         pinyin: "拼音",
         meaning: "释义",
@@ -901,7 +1009,8 @@
           "查看笔顺：逐笔演示书写顺序。",
           "笔顺提示：闪烁提示下一笔。",
           "灰色字形：切换灰色背景字形显示。",
-          "帮助：显示本使用说明。"
+          "帮助：显示本使用说明。",
+          "发音：点击朗读当前所选汉字（使用设备上安装的中文语音）。"
         ],
 
         contactMsg:
@@ -922,6 +1031,9 @@
         outlineOn: "灰階字形：開",
         outlineOff: "灰階字形：關",
         help: "說明",
+        speak: "發音",
+        speakNoSupport: "此裝置或瀏覽器不支援語音朗讀。",
+        speakNoVoice: "此裝置上找不到中文語音，請在文字轉語音設定中安裝中文語音。",
         notFound: "未找到",
         pinyin: "拼音",
         meaning: "釋義",
@@ -949,7 +1061,8 @@
           "查看筆順：逐筆演示書寫順序。",
           "筆順提示：閃爍提示下一筆。",
           "灰階字形：切換灰色背景字形顯示。",
-          "說明：顯示本使用說明。"
+          "說明：顯示本使用說明。",
+          "發音：點擊朗讀目前所選漢字（使用裝置上安裝的中文語音）。"
         ],
 
         contactMsg:
@@ -1015,7 +1128,8 @@
         '▶️',
         '💡',
         null,
-        '<span class="help-icon-btn" style="width:18px;height:18px;font-size:12px;">?</span>'
+        '<span class="help-icon-btn" style="width:18px;height:18px;font-size:12px;">?</span>',
+        '<span class="help-spk"><span class="speaker-icon"><span class="spk-body"></span><span class="spk-cone"></span><span class="spk-wave spk-wave1"></span><span class="spk-wave spk-wave2"></span></span></span>'
       ]
     };
 
@@ -1408,6 +1522,7 @@
         outlineEnabled ? T.outlineOn : T.outlineOff;
 
       document.getElementById('helpBtn').title = T.help;
+      document.getElementById('speakBtn').title = T.speak;
 
       document.getElementById('pickerOkBtn').textContent = T.ok;
       document.getElementById('pickerClearBtn').textContent = T.clear;
@@ -1972,6 +2087,8 @@
     // =====================================================
 
     function selectCharacter(char, element) {
+      stopSpeech();
+
       currentChar = char;
 
       document.querySelectorAll('.char-item').forEach(el => {
@@ -2052,6 +2169,99 @@
       });
 
       startHintLoop();
+    }
+
+
+    // =====================================================
+    // เสียงอ่านอักษรจีน (Web Speech API ของเบราว์เซอร์ / อุปกรณ์)
+    // =====================================================
+
+    function stopSpeech() {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+
+      document.getElementById('speakBtn').classList.remove('speaking');
+    }
+
+
+    function pickChineseVoice() {
+      const voices = window.speechSynthesis.getVoices() || [];
+
+      const lower = v => (v.lang || '').toLowerCase().replace('_', '-');
+
+      // ลำดับความสำคัญ: จีนกลางแผ่นดินใหญ่ > ไต้หวัน > จีนอื่นๆ (ไม่เอากวางตุ้ง)
+      return (
+        voices.find(v => lower(v) === 'zh-cn') ||
+        voices.find(v => lower(v) === 'cmn-hans-cn') ||
+        voices.find(v => lower(v) === 'zh-tw') ||
+        voices.find(v => lower(v).startsWith('zh') && lower(v) !== 'zh-hk') ||
+        voices.find(v => lower(v).startsWith('cmn')) ||
+        null
+      );
+    }
+
+
+    function showSpeechMessage(msg) {
+      activePanel = 'speech';
+
+      document.getElementById('overlayPanel').innerHTML =
+        `<h3>${T.speak}</h3><p>${msg}</p>`;
+
+      showPanel();
+    }
+
+
+    function speakChar() {
+      if (!currentChar) {
+        return;
+      }
+
+      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        showSpeechMessage(T.speakNoSupport);
+        return;
+      }
+
+      stopSpeech();
+
+      const voice = pickChineseVoice();
+      const utter = new SpeechSynthesisUtterance(currentChar);
+      const btn = document.getElementById('speakBtn');
+
+      utter.lang = voice ? voice.lang : 'zh-CN';
+
+      if (voice) {
+        utter.voice = voice;
+      }
+
+      utter.rate = 0.8;
+
+      utter.onstart = () => btn.classList.add('speaking');
+      utter.onend = () => btn.classList.remove('speaking');
+      utter.onerror = () => btn.classList.remove('speaking');
+
+      window.speechSynthesis.speak(utter);
+
+      // บางเครื่องโหลดรายการเสียงช้า ถ้าไม่พบเสียงจีนให้แจ้งหลังลองอ่านแล้ว
+      if (!voice) {
+        setTimeout(() => {
+          if (!pickChineseVoice() && !window.speechSynthesis.speaking) {
+            showSpeechMessage(T.speakNoVoice);
+          }
+        }, 600);
+      }
+    }
+
+
+    // โหลดรายการเสียงล่วงหน้า (บางเบราว์เซอร์โหลดแบบ async)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+
+      if (window.speechSynthesis.addEventListener) {
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+          window.speechSynthesis.getVoices();
+        });
+      }
     }
 
 
