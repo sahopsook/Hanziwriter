@@ -856,7 +856,7 @@
     id="footerCreditContainer">
   </div>
 
-  <div class="version-text">Version 0.14</div>
+  <div class="version-text">Version 0.15</div>
 
   <script>
     // =====================================================
@@ -2086,6 +2086,36 @@
     // เลือกอักษรจีนเพื่อฝึกเขียน
     // =====================================================
 
+    // ข้อมูลขีดของ HanziWriter: อ่านจาก stroke_data ในฐานข้อมูลก่อน (ใช้ออฟไลน์ได้)
+    // ถ้าอักษรนั้นไม่มี stroke_data ให้ถอยไปดึงจาก CDN เหมือนเดิม
+    function loadStrokeData(char, onLoad, onError) {
+      try {
+        const r = queryCharFromDB(char);
+
+        if (r && r.stroke_data) {
+          const data = JSON.parse(r.stroke_data);
+
+          if (data && data.strokes && data.strokes.length > 0) {
+            onLoad(data);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('อ่าน stroke_data ไม่สำเร็จ ใช้ CDN แทน:', char, e);
+      }
+
+      fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + encodeURIComponent(char) + '.json')
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+          }
+          return res.json();
+        })
+        .then(onLoad)
+        .catch(onError);
+    }
+
+
     function selectCharacter(char, element) {
       stopSpeech();
 
@@ -2112,6 +2142,7 @@
       const dynamicPadding = Math.round(BOX_SIZE * 0.02);
 
       writer = HanziWriter.create('writer-target', char, {
+        charDataLoader: loadStrokeData,
         width: BOX_SIZE,
         height: BOX_SIZE,
         padding: dynamicPadding,
