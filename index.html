@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -9,9 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 
-  <script src="./hanzi_common.js"></script>
-  <script src="./hanzi_extra1.js"></script>
-  <script src="./hanzi_extra2.js"></script>
+  <!--
+    hanzi_version.js เป็นไฟล์เล็ก บอกเลขเวอร์ชันของข้อมูลอักษร
+    ไฟล์ข้อมูลใหญ่ (hanzi_common.js / hanzi_extra1.js / hanzi_extra2.js)
+    จะถูกโหลดเฉพาะเมื่อยังไม่มีแคชใน IndexedDB หรือเมื่อเลขเวอร์ชันเปลี่ยน
+  -->
+  <script src="./hanzi_version.js"></script>
 
   <style>
     body {
@@ -25,12 +27,18 @@
       user-select: none;
     }
 
+    /* กล่องครอบช่องค้นหา + แผงเลือกอักษร */
+    .search-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      margin-bottom: 12px;
+    }
+
     .search-bar {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
       width: 100%;
-      max-width: 380px;
     }
 
     .search-bar input {
@@ -57,6 +65,243 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+    }
+
+    .search-bar button.active {
+      background: #e65100;
+    }
+
+    /* ===== ไอคอนอักษร 文 วาดด้วย CSS ===== */
+    .wen-icon {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      display: block;
+      color: #fff;
+    }
+
+    .wen-icon span {
+      position: absolute;
+      background: currentColor;
+      border-radius: 2px;
+    }
+
+    /* ขีดที่ 1: จุด (点) */
+    .wen-icon .wen-dot {
+      width: 4px;
+      height: 7px;
+      left: 13px;
+      top: 1px;
+      transform: rotate(-25deg);
+      border-radius: 2px 2px 3px 3px;
+    }
+
+    /* ขีดที่ 2: ขีดนอน (横) */
+    .wen-icon .wen-heng {
+      height: 3.5px;
+      left: 3px;
+      right: 3px;
+      top: 9px;
+    }
+
+    /* ขีดที่ 3: ขีดเฉียงซ้าย (撇) */
+    .wen-icon .wen-pie {
+      width: 3.5px;
+      height: 22px;
+      left: 11.25px;
+      top: 9.5px;
+      transform: rotate(47deg);
+    }
+
+    /* ขีดที่ 4: ขีดเฉียงขวา (捺) */
+    .wen-icon .wen-na {
+      width: 4px;
+      height: 23px;
+      left: 16px;
+      top: 9px;
+      transform: rotate(-50deg);
+    }
+
+    /* ไอคอน 文 ขนาดเล็กในหน้าวิธีใช้ */
+    .help-wen {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      background: #ff9800;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      vertical-align: middle;
+    }
+
+    .help-wen .wen-icon {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      transform: scale(0.6);
+      transform-origin: 0 0;
+    }
+
+    /* ===== แผงเลือกอักษร ===== */
+    .picker-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: #fffdf7;
+      border: 2px solid #ffb74d;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      display: none;
+      flex-direction: column;
+      max-height: min(70vh, 520px);
+      overflow: hidden;
+    }
+
+    .picker-panel.show {
+      display: flex;
+    }
+
+    .picker-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #ffe0b2;
+      flex-shrink: 0;
+    }
+
+    .picker-selected {
+      flex: 1;
+      min-width: 0;
+      min-height: 32px;
+      line-height: 32px;
+      font-size: 22px;
+      font-family: "KaiTi", "STKaiti", serif;
+      color: #bf360c;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .picker-selected.empty {
+      font-size: 14px;
+      color: #aaa;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    .picker-clear,
+    .picker-ok {
+      flex-shrink: 0;
+      height: 34px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .picker-clear {
+      background: #eeeeee;
+      color: #616161;
+    }
+
+    .picker-ok {
+      background: #43a047;
+      color: #fff;
+    }
+
+    .picker-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 10px;
+      border-bottom: 1px solid #ffe0b2;
+      flex-shrink: 0;
+    }
+
+    .picker-tab {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border-radius: 16px;
+      border: 1px solid #ffb74d;
+      background: #fff;
+      color: #e65100;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .picker-tab.active {
+      background: #ff9800;
+      color: #fff;
+    }
+
+    .picker-grid {
+      overflow-y: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+      gap: 6px;
+      align-content: start;
+    }
+
+    .picker-stroke-label {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      font-weight: bold;
+      color: #8d6e63;
+      border-bottom: 1px dashed #d7ccc8;
+      padding: 4px 0 2px;
+      margin-top: 4px;
+    }
+
+    .picker-cell {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-family: "KaiTi", "STKaiti", serif;
+      background: #fff9c4;
+      border: 2px solid #e6ce8a;
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      color: #212121;
+    }
+
+    .picker-cell.selected {
+      background: #ff9800;
+      border-color: #e65100;
+      color: #fff;
+    }
+
+    .picker-cell .order-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      background: #d84315;
+      color: #fff;
+      font-size: 10px;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      line-height: 16px;
+      text-align: center;
+    }
+
+    .picker-msg {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #8d6e63;
+      padding: 20px 0;
+      font-size: 14px;
     }
 
     .char-list {
@@ -86,6 +331,7 @@
       flex-shrink: 0;
     }
 
+    /* เหลือเฉพาะเส้นกรอบ (เอาเส้นกากบาทด้านหลังตัวอักษรออกแล้ว) */
     .char-item::before {
       content: '';
       position: absolute;
@@ -94,9 +340,6 @@
       right: 4px;
       bottom: 4px;
       border: 1px solid #bcaaa4;
-      background:
-        linear-gradient(to right, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%),
-        linear-gradient(to bottom, transparent 48%, #bcaaa4 49%, #bcaaa4 51%, transparent 52%);
       pointer-events: none;
     }
 
@@ -181,8 +424,23 @@
     .overlay-panel p {
       margin: 6px 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
+    }
+
+    /* ช่องไอคอนในหน้าวิธีใช้: สูงเท่าบรรทัดแรกของข้อความ เพื่อให้ไอคอนอยู่ตรงบรรทัดแรก */
+    .overlay-panel .help-row-icon {
+      flex: 0 0 22px;
+      width: 22px;
+      height: 25.5px; /* = font-size 15px x line-height 1.7 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay-panel .help-row-text {
+      flex: 1;
+      min-width: 0;
     }
 
     .controls {
@@ -399,15 +657,38 @@
 
 <body>
 
-  <div class="search-bar">
-    <input
-      type="text"
-      id="charInput"
-      placeholder="Enter Chinese characters, e.g. 你好"
-      autocomplete="off"
-      aria-label="Chinese character search"
-    >
-    <button id="searchBtn" onclick="renderCharList()">🔍</button>
+  <div class="search-wrap" id="searchWrap">
+    <div class="search-bar">
+      <!-- ปุ่มเลือกอักษร (ตัว 文 วาดด้วย CSS) -->
+      <button id="pickBtn" type="button" onclick="togglePicker()">
+        <span class="wen-icon">
+          <span class="wen-dot"></span>
+          <span class="wen-heng"></span>
+          <span class="wen-pie"></span>
+          <span class="wen-na"></span>
+        </span>
+      </button>
+
+      <input
+        type="text"
+        id="charInput"
+        placeholder="Enter Chinese characters, e.g. 你好"
+        autocomplete="off"
+        aria-label="Chinese character search"
+      >
+      <button id="searchBtn" onclick="renderCharList()">🔍</button>
+    </div>
+
+    <!-- แผงเลือกอักษรตามระดับ HSK (แสดงทับใต้ช่องค้นหา) -->
+    <div class="picker-panel" id="pickerPanel">
+      <div class="picker-header">
+        <div class="picker-selected empty" id="pickerSelected"></div>
+        <button type="button" class="picker-clear" id="pickerClearBtn" onclick="clearPickerSelection()"></button>
+        <button type="button" class="picker-ok" id="pickerOkBtn" onclick="confirmPicker()"></button>
+      </div>
+      <div class="picker-tabs" id="pickerTabs"></div>
+      <div class="picker-grid" id="pickerGrid"></div>
+    </div>
   </div>
 
   <div class="char-list" id="charList"></div>
@@ -478,13 +759,11 @@
     id="footerCreditContainer">
   </div>
 
-  <div class="version-text">Version 0.07</div>
+  <div class="version-text">Version 0.11</div>
 
   <script>
     // =====================================================
     // ระบบเลือกภาษาตามภาษา OS / Browser
-    // รองรับ ไทย อังกฤษ จีนตัวย่อ และจีนตัวเต็ม
-    // ภาษาอื่นใช้ภาษาอังกฤษ
     // =====================================================
 
     const TRANSLATIONS = {
@@ -506,6 +785,16 @@
         radical: "ตัวอักษรนำ",
         descTitle: "คำบรรยายตัวอักษร",
         helpTitle: "วิธีใช้งาน",
+
+        pickChars: "เลือกอักษร",
+        ok: "ตกลง",
+        clear: "ล้าง",
+        loading: "กำลังโหลดฐานข้อมูล...",
+        strokeUnit: "ขีด",
+        noneSelected: "ยังไม่ได้เลือกอักษร",
+        emptyLevel: "ไม่มีอักษรในระดับนี้",
+        helpPick:
+          "ปุ่ม 文 (เลือกอักษร): กดเพื่อเปิดแผงเลือกอักษรจีนตามระดับ HSK 1–6 และ 7–9 (รวมเป็นกลุ่มเดียว) โดยเรียงจากขีดน้อยไปขีดมาก กดที่อักษรเพื่อเลือก (จะมีเลขแสดงลำดับที่เลือก) กดซ้ำเพื่อยกเลิก ปุ่ม ล้าง จะเคลียร์ที่เลือกทั้งหมด จากนั้นกด ตกลง เพื่อนำอักษรไปค้นหาและฝึกเขียนทันที",
 
         helpIntro:
           "เมื่อใส่อักษรจีนในช่องค้นหา จะมีอักษรแสดงในแถวถัดมา จากนั้นสามารถเลือกอักษรที่ต้องการฝึกเขียนได้",
@@ -545,6 +834,16 @@
         descTitle: "Character Description",
         helpTitle: "How to use",
 
+        pickChars: "Pick characters",
+        ok: "OK",
+        clear: "Clear",
+        loading: "Loading database...",
+        strokeUnit: "strokes",
+        noneSelected: "No characters selected",
+        emptyLevel: "No characters in this level",
+        helpPick:
+          "文 button (pick characters): opens a panel of Chinese characters by HSK level 1–6 and 7–9 (combined into one group), sorted from fewest to most strokes. Tap a character to select it (a number shows the selection order); tap again to deselect. Clear removes all selections. Then press OK to search and start practicing right away.",
+
         helpIntro:
           "Type a Chinese character in the search box, and the characters will appear in the row below. You can then select a character to practice writing.",
 
@@ -582,6 +881,16 @@
         radical: "部首",
         descTitle: "汉字说明",
         helpTitle: "使用说明",
+
+        pickChars: "选字",
+        ok: "确定",
+        clear: "清除",
+        loading: "正在加载数据库…",
+        strokeUnit: "画",
+        noneSelected: "尚未选择汉字",
+        emptyLevel: "此级别没有汉字",
+        helpPick:
+          "文 按钮（选字）：点击打开按 HSK 1–6 级及 7–9 级（合并为一组）分类的汉字面板，按笔画由少到多排列。点击汉字即可选中（会显示选择顺序编号），再次点击取消选择。“清除”可取消全部选择，然后点击“确定”即可搜索并立即开始练习。",
 
         helpIntro:
           "在搜索框中输入汉字后，下方会显示字符列表，可选择要练习的字。",
@@ -621,6 +930,16 @@
         descTitle: "漢字說明",
         helpTitle: "使用說明",
 
+        pickChars: "選字",
+        ok: "確定",
+        clear: "清除",
+        loading: "正在載入資料庫…",
+        strokeUnit: "畫",
+        noneSelected: "尚未選擇漢字",
+        emptyLevel: "此級別沒有漢字",
+        helpPick:
+          "文 按鈕（選字）：點擊開啟依 HSK 1–6 級及 7–9 級（合併為一組）分類的漢字面板，按筆畫由少到多排列。點擊漢字即可選取（會顯示選擇順序編號），再次點擊取消選取。「清除」可取消全部選取，然後點擊「確定」即可搜尋並立即開始練習。",
+
         helpIntro:
           "在搜尋框中輸入漢字後，下方會顯示字符清單，可選擇要練習的字。",
 
@@ -641,15 +960,6 @@
       }
     };
 
-
-    // =====================================================
-    // เลือกภาษาจาก navigator.language
-    // th       = ภาษาไทย
-    // en       = ภาษาอังกฤษ
-    // zh-Hans  = จีนตัวย่อ
-    // zh-Hant  = จีนตัวเต็ม
-    // ภาษาอื่น = ภาษาอังกฤษ
-    // =====================================================
 
     function getLangDict() {
       const lang = (navigator.language || 'en').toLowerCase();
@@ -677,7 +987,6 @@
     const T = getLangDict();
 
 
-    // เปลี่ยนภาษาเอกสารตามภาษาที่เลือก
     function setDocumentLanguage() {
       if (T === TRANSLATIONS.th) {
         document.documentElement.lang = 'th';
@@ -693,7 +1002,6 @@
     setDocumentLanguage();
 
 
-    // แสดงข้อความส่วนติดต่อและเครดิตตามภาษาเครื่อง
     document.getElementById('contactTextContainer').innerHTML = T.contactMsg;
     document.getElementById('footerCreditContainer').innerHTML = T.creditMsg;
 
@@ -715,6 +1023,15 @@
       return '<span class="mini-grid inline-small"><span>我</span></span>';
     }
 
+    function wenIconHtml() {
+      return (
+        '<span class="help-wen"><span class="wen-icon">' +
+        '<span class="wen-dot"></span><span class="wen-heng"></span>' +
+        '<span class="wen-pie"></span><span class="wen-na"></span>' +
+        '</span></span>'
+      );
+    }
+
 
     // =====================================================
     // ตัวแปรสถานะ
@@ -733,6 +1050,13 @@
     let quizActive = false;
     let activePanel = null;
     let lastCharData = null;
+
+    // สถานะแผงเลือกอักษร
+    let hskLevels = null;      // { 1: [{char, strokes}], ... }
+    let pickerOpen = false;
+    let pickerTab = 1;
+    const HSK_TAB_COUNT = 7;   // 1-6 และ 7 (= HSK 7-9 รวมกัน)
+    let pickerSelected = [];   // เก็บตามลำดับที่ผู้ใช้กดเลือก
 
 
     // =====================================================
@@ -810,8 +1134,87 @@
 
 
     // =====================================================
-    // รวมฐานข้อมูล SQLite ทั้ง 3 ไฟล์
+    // ฐานข้อมูลอักษร: โหลดจากแคช IndexedDB ถ้ามี
+    // - ถ้ามีแคช และเลขเวอร์ชันตรงกับ hanzi_version.js -> ใช้แคชเลย ไม่โหลดไฟล์ js ใหญ่
+    // - ถ้าไม่มีแคช หรือเวอร์ชันเปลี่ยน -> โหลด js ทั้ง 3 ไฟล์ รวมเป็นฐานข้อมูล แล้วบันทึกแคช
+    // - ถ้าออฟไลน์และไม่มี hanzi_version.js -> ใช้แคชที่มีอยู่
     // =====================================================
+
+    const IDB_NAME = 'hanziPracticeDB';
+    const IDB_STORE = 'kv';
+    const IDB_KEY = 'hanzi_sqlite';
+
+    const DATA_SOURCES = [
+      {
+        file: './hanzi_common.js',
+        get: () => typeof COMMON_SQLITE_BASE64 !== 'undefined' ? COMMON_SQLITE_BASE64 : undefined
+      },
+      {
+        file: './hanzi_extra1.js',
+        get: () => typeof EXTRA1_SQLITE_BASE64 !== 'undefined' ? EXTRA1_SQLITE_BASE64 : undefined
+      },
+      {
+        file: './hanzi_extra2.js',
+        get: () => typeof EXTRA2_SQLITE_BASE64 !== 'undefined' ? EXTRA2_SQLITE_BASE64 : undefined
+      }
+    ];
+
+    function getDataVersion() {
+      return typeof HANZI_DATA_VERSION !== 'undefined'
+        ? String(HANZI_DATA_VERSION)
+        : null;
+    }
+
+    function idbOpen() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error('IndexedDB ไม่รองรับ'));
+          return;
+        }
+
+        const req = indexedDB.open(IDB_NAME, 1);
+
+        req.onupgradeneeded = () => {
+          req.result.createObjectStore(IDB_STORE);
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+        req.onblocked = () => reject(new Error('IndexedDB ถูกบล็อก'));
+      });
+    }
+
+    function idbGet(idb, key) {
+      return new Promise((resolve, reject) => {
+        const tx = idb.transaction(IDB_STORE, 'readonly');
+        const req = tx.objectStore(IDB_STORE).get(key);
+
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function idbPut(idb, key, value) {
+      return new Promise((resolve, reject) => {
+        const tx = idb.transaction(IDB_STORE, 'readwrite');
+
+        tx.objectStore(IDB_STORE).put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('บันทึก IndexedDB ไม่สำเร็จ'));
+      });
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const el = document.createElement('script');
+
+        el.src = src;
+        el.onload = () => resolve();
+        el.onerror = () => reject(new Error('โหลดไฟล์ไม่สำเร็จ: ' + src));
+
+        document.head.appendChild(el);
+      });
+    }
 
     function appendDatabase(SQL, targetDb, b64Data) {
       if (typeof b64Data === 'undefined') {
@@ -828,13 +1231,21 @@
       const subDb = new SQL.Database(bytes);
 
       try {
-        const res = subDb.exec('SELECT * FROM characters');
+        // ไฟล์ข้อมูลเก่าอาจยังไม่มีคอลัมน์ hsk -> ใส่ NULL แทน
+        const info = subDb.exec('PRAGMA table_info(characters)');
+        const names = info.length > 0 ? info[0].values.map(r => r[1]) : [];
+        const hskCol = names.includes('hsk') ? 'hsk' : 'NULL';
+
+        const res = subDb.exec(
+          'SELECT char, pinyin, words, stroke_count, radical, stroke_data, ' +
+          hskCol + ' FROM characters'
+        );
 
         if (res.length > 0) {
           targetDb.exec('BEGIN TRANSACTION;');
 
           const stmt = targetDb.prepare(
-            'INSERT OR REPLACE INTO characters VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT OR REPLACE INTO characters VALUES (?, ?, ?, ?, ?, ?, ?)'
           );
 
           try {
@@ -858,6 +1269,93 @@
       }
     }
 
+    async function initDatabase(SQL) {
+      const version = getDataVersion();
+      let idb = null;
+
+      try {
+        idb = await idbOpen();
+      } catch (e) {
+        console.warn('ใช้ IndexedDB ไม่ได้ จะโหลดข้อมูลใหม่ทุกครั้ง:', e);
+      }
+
+      // 1) ลองใช้แคช
+      if (idb) {
+        try {
+          const cached = await idbGet(idb, IDB_KEY);
+
+          if (
+            cached &&
+            cached.data &&
+            (version === null || cached.version === version)
+          ) {
+            const cachedDb = new SQL.Database(cached.data);
+
+            // ตรวจว่าแคชใช้งานได้จริง
+            cachedDb.exec('SELECT char FROM characters LIMIT 1');
+
+            console.log('ใช้ฐานข้อมูลจากแคช IndexedDB (เวอร์ชัน ' + cached.version + ')');
+            return cachedDb;
+          }
+        } catch (e) {
+          console.warn('อ่านแคชไม่สำเร็จ จะโหลดข้อมูลใหม่:', e);
+        }
+      }
+
+      // 2) ไม่มีแคช / เวอร์ชันเปลี่ยน -> โหลดไฟล์ js แล้วรวมฐานข้อมูล
+      const newDb = new SQL.Database();
+
+      newDb.run(`
+        CREATE TABLE characters (
+          char TEXT PRIMARY KEY,
+          pinyin TEXT,
+          words TEXT,
+          stroke_count INTEGER,
+          radical TEXT,
+          stroke_data TEXT,
+          hsk INTEGER
+        );
+      `);
+
+      let allLoaded = true;
+
+      for (const src of DATA_SOURCES) {
+        try {
+          await loadScript(src.file);
+          appendDatabase(SQL, newDb, src.get());
+        } catch (e) {
+          allLoaded = false;
+          console.error('โหลดข้อมูลไม่ครบ:', e);
+        }
+      }
+
+      console.log('โหลดและรวมฐานข้อมูลทั้ง 3 ไฟล์' + (allLoaded ? 'สำเร็จ!' : 'ไม่ครบ'));
+
+      // 3) บันทึกแคช (เฉพาะเมื่อโหลดครบ และมีเลขเวอร์ชัน)
+      if (idb && allLoaded && version !== null) {
+        try {
+          // หมายเหตุ: export() ปิดแล้วเปิดฐานข้อมูลใหม่ ต้องเรียกก่อนมีการใช้งานอื่น
+          const data = newDb.export();
+
+          await idbPut(idb, IDB_KEY, {
+            version: version,
+            savedAt: Date.now(),
+            data: data
+          });
+
+          console.log('บันทึกแคช IndexedDB แล้ว (เวอร์ชัน ' + version + ')');
+
+          if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().catch(() => {});
+          }
+        } catch (e) {
+          console.warn('บันทึกแคช IndexedDB ไม่สำเร็จ:', e);
+        }
+      }
+
+      return newDb;
+    }
+
 
     // =====================================================
     // เริ่มต้นโปรแกรม
@@ -867,6 +1365,8 @@
       applyBoxSize();
       initTooltips();
       updateOutlineIcon();
+      renderPickerTabs();
+      updatePickerSelectedView();
 
       try {
         const SQL = await initSqlJs({
@@ -874,44 +1374,13 @@
             `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`
         });
 
-        db = new SQL.Database();
+        db = await initDatabase(SQL);
 
-        db.run(`
-          CREATE TABLE characters (
-            char TEXT PRIMARY KEY,
-            pinyin TEXT,
-            words TEXT,
-            stroke_count INTEGER,
-            radical TEXT,
-            stroke_data TEXT
-          );
-        `);
-
-        appendDatabase(
-          SQL,
-          db,
-          typeof COMMON_SQLITE_BASE64 !== 'undefined'
-            ? COMMON_SQLITE_BASE64
-            : undefined
-        );
-
-        appendDatabase(
-          SQL,
-          db,
-          typeof EXTRA1_SQLITE_BASE64 !== 'undefined'
-            ? EXTRA1_SQLITE_BASE64
-            : undefined
-        );
-
-        appendDatabase(
-          SQL,
-          db,
-          typeof EXTRA2_SQLITE_BASE64 !== 'undefined'
-            ? EXTRA2_SQLITE_BASE64
-            : undefined
-        );
-
-        console.log('โหลดและรวมฐานข้อมูลทั้ง 3 ไฟล์สำเร็จ!');
+        // ฐานข้อมูลพร้อมแล้ว: สร้างรายการ HSK ใหม่ (ถ้าแผงเปิดอยู่ให้แสดงทันที)
+        hskLevels = null;
+        if (pickerOpen) {
+          renderPickerGrid();
+        }
 
       } catch (err) {
         console.error('เกิดข้อผิดพลาดในการโหลดฐานข้อมูล:', err);
@@ -924,10 +1393,9 @@
     // =====================================================
 
     function initTooltips() {
-      // จุดที่เพิ่มเพื่อเปลี่ยนข้อความในช่องค้นหาตามภาษาเครื่อง
       document.getElementById('charInput').placeholder = T.placeholder;
 
-      // เปลี่ยนข้อความ Tooltip ของปุ่มต่าง ๆ
+      document.getElementById('pickBtn').title = T.pickChars;
       document.getElementById('searchBtn').title = T.search;
       document.getElementById('descBtn').title = T.description;
       document.getElementById('restartBtn').title = T.restart;
@@ -940,6 +1408,9 @@
         outlineEnabled ? T.outlineOn : T.outlineOff;
 
       document.getElementById('helpBtn').title = T.help;
+
+      document.getElementById('pickerOkBtn').textContent = T.ok;
+      document.getElementById('pickerClearBtn').textContent = T.clear;
     }
 
 
@@ -966,6 +1437,272 @@
 
       return result.char ? result : null;
     }
+
+
+    // =====================================================
+    // แผงเลือกอักษรตามระดับ HSK
+    // =====================================================
+
+    // สร้างรายการอักษรแต่ละระดับจากฟิลด์ hsk ในฐานข้อมูล แล้วเรียงจากขีดน้อยไปมาก
+    // hsk = 1-6 คือ HSK 1-6, hsk = 7 คือ HSK 7-9 (รวมกัน), NULL = ไม่อยู่ใน HSK
+    function buildHskLevels() {
+      if (hskLevels) {
+        return hskLevels;
+      }
+
+      const result = {};
+
+      for (let lv = 1; lv <= HSK_TAB_COUNT; lv++) {
+        result[lv] = [];
+      }
+
+      try {
+        const stmt = db.prepare(
+          'SELECT char, stroke_count, hsk FROM characters WHERE hsk IS NOT NULL'
+        );
+
+        try {
+          while (stmt.step()) {
+            const row = stmt.get();
+            const level = Number(row[2]);
+
+            if (!result[level]) {
+              continue;
+            }
+
+            const strokes = Number(row[1]);
+
+            result[level].push({
+              char: row[0],
+              strokes: strokes > 0 ? strokes : null
+            });
+          }
+        } finally {
+          stmt.free();
+        }
+      } catch (err) {
+        // ฐานข้อมูลยังไม่มีคอลัมน์ hsk
+        console.warn('อ่านฟิลด์ hsk ไม่ได้:', err);
+      }
+
+      // เรียงตามจำนวนขีด (ไม่ทราบจำนวนขีดไว้ท้ายสุด) ถ้าเท่ากันเรียงตามพินอิน
+      for (let lv = 1; lv <= HSK_TAB_COUNT; lv++) {
+        result[lv].sort((a, b) => {
+          const sa = a.strokes === null ? 9999 : a.strokes;
+          const sb = b.strokes === null ? 9999 : b.strokes;
+
+          if (sa !== sb) {
+            return sa - sb;
+          }
+
+          return a.char.localeCompare(b.char, 'zh-Hans-CN');
+        });
+      }
+
+      hskLevels = result;
+      return hskLevels;
+    }
+
+
+    function renderPickerTabs() {
+      const tabs = document.getElementById('pickerTabs');
+
+      tabs.innerHTML = '';
+
+      for (let lv = 1; lv <= HSK_TAB_COUNT; lv++) {
+        const btn = document.createElement('button');
+
+        btn.type = 'button';
+        btn.className = 'picker-tab' + (lv === pickerTab ? ' active' : '');
+        btn.textContent = lv === HSK_TAB_COUNT ? 'HSK 7-9' : 'HSK ' + lv;
+        btn.onclick = () => switchPickerTab(lv);
+
+        tabs.appendChild(btn);
+      }
+    }
+
+
+    function switchPickerTab(lv) {
+      pickerTab = lv;
+
+      document.querySelectorAll('.picker-tab').forEach((el, idx) => {
+        el.classList.toggle('active', idx + 1 === lv);
+      });
+
+      renderPickerGrid();
+      document.getElementById('pickerGrid').scrollTop = 0;
+    }
+
+
+    function renderPickerGrid() {
+      const grid = document.getElementById('pickerGrid');
+
+      grid.innerHTML = '';
+
+      if (!db) {
+        grid.innerHTML = `<div class="picker-msg">${T.loading}</div>`;
+        return;
+      }
+
+      const list = buildHskLevels()[pickerTab] || [];
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div class="picker-msg">${T.emptyLevel}</div>`;
+        return;
+      }
+
+      let lastStroke = undefined;
+
+      list.forEach(item => {
+        // หัวข้อกลุ่มตามจำนวนขีด
+        if (item.strokes !== lastStroke) {
+          lastStroke = item.strokes;
+
+          const label = document.createElement('div');
+
+          label.className = 'picker-stroke-label';
+          label.textContent =
+            (item.strokes === null ? '?' : item.strokes) + ' ' + T.strokeUnit;
+
+          grid.appendChild(label);
+        }
+
+        const cell = document.createElement('div');
+
+        cell.className = 'picker-cell';
+        cell.dataset.char = item.char;
+        cell.textContent = item.char;
+        cell.onclick = () => togglePickChar(item.char);
+
+        grid.appendChild(cell);
+      });
+
+      updatePickerCells();
+    }
+
+
+    function togglePickChar(ch) {
+      const idx = pickerSelected.indexOf(ch);
+
+      if (idx >= 0) {
+        pickerSelected.splice(idx, 1);
+      } else {
+        pickerSelected.push(ch);
+      }
+
+      updatePickerCells();
+      updatePickerSelectedView();
+    }
+
+
+    // อัปเดตสถานะช่องที่เลือก + เลขลำดับการเลือก
+    function updatePickerCells() {
+      document.querySelectorAll('.picker-cell').forEach(cell => {
+        const ch = cell.dataset.char;
+        const idx = pickerSelected.indexOf(ch);
+
+        cell.classList.toggle('selected', idx >= 0);
+
+        let badge = cell.querySelector('.order-badge');
+
+        if (idx >= 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'order-badge';
+            cell.appendChild(badge);
+          }
+          badge.textContent = idx + 1;
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+    }
+
+
+    function updatePickerSelectedView() {
+      const view = document.getElementById('pickerSelected');
+
+      if (pickerSelected.length === 0) {
+        view.textContent = T.noneSelected;
+        view.classList.add('empty');
+      } else {
+        view.textContent = pickerSelected.join('');
+        view.classList.remove('empty');
+        view.scrollLeft = view.scrollWidth;
+      }
+    }
+
+
+    function clearPickerSelection() {
+      pickerSelected = [];
+      updatePickerCells();
+      updatePickerSelectedView();
+    }
+
+
+    function openPicker() {
+      pickerOpen = true;
+      pickerSelected = [];
+
+      document.getElementById('pickerPanel').classList.add('show');
+      document.getElementById('pickBtn').classList.add('active');
+
+      updatePickerSelectedView();
+      renderPickerGrid();
+    }
+
+
+    function closePicker() {
+      pickerOpen = false;
+
+      document.getElementById('pickerPanel').classList.remove('show');
+      document.getElementById('pickBtn').classList.remove('active');
+    }
+
+
+    function togglePicker() {
+      if (pickerOpen) {
+        closePicker();
+      } else {
+        openPicker();
+      }
+    }
+
+
+    // กดตกลง: ใส่อักษรลงช่องค้นหา แล้วค้นหาเหมือนกดปุ่มค้นหา
+    function confirmPicker() {
+      if (pickerSelected.length === 0) {
+        closePicker();
+        return;
+      }
+
+      document.getElementById('charInput').value = pickerSelected.join('');
+
+      closePicker();
+      renderCharList();
+    }
+
+
+    // คลิกนอกแผงเพื่อปิด (ใช้ composedPath เพราะบางองค์ประกอบถูกวาดใหม่ระหว่างคลิก)
+    document.addEventListener('click', function(e) {
+      if (!pickerOpen) {
+        return;
+      }
+
+      const wrap = document.getElementById('searchWrap');
+      const path = e.composedPath ? e.composedPath() : [];
+
+      if (!path.includes(wrap) && !wrap.contains(e.target)) {
+        closePicker();
+      }
+    });
+
+    // กด Esc เพื่อปิดแผง
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && pickerOpen) {
+        closePicker();
+      }
+    });
 
 
     // =====================================================
@@ -1011,7 +1748,13 @@
 
       let html = `<h3>${T.helpTitle}</h3>`;
 
-      html += `<p>${HELP_ICONS.search} ${T.helpIntro}</p>`;
+      const row = (icon, text) =>
+        `<p><span class="help-row-icon">${icon}</span>` +
+        `<span class="help-row-text">${text}</span></p>`;
+
+      // คำอธิบายปุ่ม 文 อยู่แรกสุด
+      html += row(wenIconHtml(), T.helpPick);
+      html += row(HELP_ICONS.search, T.helpIntro);
 
       T.helpItems.forEach((line, idx) => {
         const icon =
@@ -1019,7 +1762,7 @@
             ? HELP_ICONS.items[idx]
             : miniGridIconHtml();
 
-        html += `<p>${icon} ${line}</p>`;
+        html += row(icon, line);
       });
 
       panel.innerHTML = html;
@@ -1342,6 +2085,7 @@
       'keydown',
       function(e) {
         if (e.key === 'Enter') {
+          closePicker();
           renderCharList();
         }
       }
