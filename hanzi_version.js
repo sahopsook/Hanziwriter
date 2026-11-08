@@ -1,0 +1,1 @@
+const HANZI_DATA_VERSION = "1a21bf972002";
